@@ -109,7 +109,7 @@ export default next => async req => {
 
 Middlewares are executed in [LIFO order](https://en.wikipedia.org/wiki/FIFO_and_LIFO_accounting#LIFO) ("Last In, First Out").
 
-Everytime your `push` a new middleware to the stack (`api.use( ... )`...), it is added as a new [onion layer](https://www.google.com/search?q=middleware+onion&tbm=isch) on top of all existing ones.
+Everytime you push a new middleware to the stack, it is added as a new [onion layer](https://www.google.com/search?q=middleware+onion&tbm=isch) on top of all existing ones.
 
 #### Simple example
 
@@ -118,7 +118,7 @@ api.use(A);
 api.use(B);
 ```
 
-**Execution order**
+Execution order:
 
   1. `B` "Before" logic
   2. `A` "Before" logic
@@ -198,6 +198,7 @@ api.use(createSetAccessToken("RefreshToken"));
   - Normalizes responses with [normalizr](https://github.com/paularmstrong/normalizr)
 
 ```js
+import { schema } from "normalizr";
 import createNormalize from "fetch-run/src/use/normalize";
 
 const userSchema = new schema.Entity("users");
@@ -220,4 +221,4 @@ const mapSchema = {
 api.use(createNormalize(mapSchema));
 ```
 
-_Note_: You need to install `normalizr`.
+_Note_: You need to install [normalizr](https://github.com/paularmstrong/normalizr).
