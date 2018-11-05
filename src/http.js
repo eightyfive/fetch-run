@@ -6,9 +6,10 @@ const defaultHeaders = {
 export default class Http {
   constructor(baseUri, headers = defaultHeaders) {
     this.baseUri = baseUri;
+    this.headers = { ...headers };
+
     this.middlewares = [];
     this.runThrough = null;
-    this.headers = { ...headers };
   }
 
   fetch = req => {
