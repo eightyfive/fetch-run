@@ -2,7 +2,7 @@
   "name": "fetch-run",
   "version": "0.0.1",
   "description": "Fetch middlewares for API endpoints",
-  "main": "src/http.js",
+  "main": "src/index.js",
   "scripts": {
     "format:watch": "onchange 'src/**/*.js' -- prettier --write {{changed}}",
     "test": "echo \"Error: no test specified\" && exit 1"

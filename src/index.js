@@ -26,7 +26,7 @@ export default class Http {
   };
 
   use(middleware) {
-    this.middlewares.push(middleware);
+    this.middlewares.unshift(middleware);
   }
 
   get(pathname, data) {
@@ -63,11 +63,7 @@ export default class Http {
 
   run(req) {
     if (!this.runThrough) {
-      const middlewares = this.middlewares.slice();
-
-      middlewares.reverse();
-
-      this.runThrough = compose(...middlewares)(this.fetch);
+      this.runThrough = compose(...this.middlewares)(this.fetch);
     }
 
     return this.runThrough(req);
