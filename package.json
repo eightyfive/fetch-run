@@ -4,11 +4,16 @@
   "description": "Fetch wrapper to easily deal with API endpoints",
   "main": "src/http.js",
   "scripts": {
+    "format:watch": "onchange 'src/**/*.js' -- prettier --write {{changed}}",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "fetch"
   ],
   "author": "Benoit Sagols",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "onchange": "^5.1.0",
+    "prettier": "^1.14.3"
+  }
 }
