@@ -44,8 +44,8 @@ if (__DEV__) {
 
 const api = new Api(baseUri);
 
-api.use(... middleware 1 ...);
-api.use(... middleware 2 ...);
+api.use(/* middleware 1 */);
+api.use(/* middleware 2 */);
 api.use(...);
 // ...
 
@@ -54,22 +54,20 @@ export default api;
 
 ## Middlewares
 
-A simple implementation of the middleware pattern in order to modify the `Request` and/or `Response` prior/after your API calls:
+A simple implementation of the middleware pattern in order to modify the [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) and/or the [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) prior to/after your API calls:
 
-  - [Express](https://expressjs.com/en/guide/using-middleware.html)
-  - [Laravel](https://laravel.com/docs/5.7/middleware)
-  - [Redux](https://redux.js.org/advanced/middleware)
+  - [Using Express middleware](https://expressjs.com/en/guide/using-middleware.html)
+  - [Middleware - Laravel](https://laravel.com/docs/5.7/middleware)
+  - [Middleware - Redux](https://redux.js.org/advanced/middleware)
   - ...
 
-A good way to visualize the middleware pattern is to think of the request/response lifecycle [as an onion](https://www.google.com/search?q=middleware+onion&tbm=isch).
-
-The middlewares are the layers around the actual `fetch` call which is the very center of the onion.
+A good way to visualize the middleware pattern is to think of the Request/Response lifecycle [as an onion](https://www.google.com/search?q=middleware+onion&tbm=isch). Every middleware added being a new onion layer.
 
 ### `Request`/`Response`
 
 `fetch-run` uses [fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) Web APIs standards:
 
-  - [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request),
+  - [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request)
   - [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
   - [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers)
 
@@ -113,26 +111,26 @@ Middlewares are executed in [LIFO order](https://en.wikipedia.org/wiki/FIFO_and_
 
 Everytime your `push` a new middleware to the stack (`api.use( ... )`...), it is added as a new [onion layer](https://www.google.com/search?q=middleware+onion&tbm=isch) on top of all existing ones.
 
-Simple example:
+#### Simple example
 
 ```js
-api.use(mA);
-api.use(mB);
+api.use(A);
+api.use(B);
 ```
 
-Execution order:
+**Execution order**
 
-  1. `mB` "Before" logic
-  2. `mA` "Before" logic
+  1. `B` "Before" logic
+  2. `A` "Before" logic
   3. (actual `fetch` call)
-  4. `mA` "After" logic
-  5. `mB` "After" logic
+  4. `A` "After" logic
+  5. `B` "After" logic
 
-`mB` is the most outer layer of the [onion](https://www.google.com/search?q=middleware+onion&tbm=isch).
+_Note_: `B` is the most outer layer of the [onion](https://www.google.com/search?q=middleware+onion&tbm=isch).
 
 ## Included middlewares
 
-Don't hesistate to browse the source code of middlewares in [`src/use`] folder.
+Don't hesistate to browse the [source code of middlewares](https://github.com/eightyfive/fetch-run/tree/master/src/use), it's very instrcutive and relatively simple to understand.
 
 ### Error management
 
@@ -149,7 +147,7 @@ api.use(createErrorHandler());
 // Later in app, when you catch the `err`, `err.data` will contains the JSON error server response.
 ```
 
-You can pass a custom function that maps server response to `Error`:
+You can pass a custom function that maps the server response to the `Error`:
 
 ```js
 api.use(createErrorHandler(json => ({
@@ -181,7 +179,7 @@ api.use(createSetAccessToken("AccessToken"));
 
   - Remembers refresh token as soon as it is available in Response
   - Refreshes access token if server responds with `401` status code (Unauthorized)
-  - Replays the previous faulty Request with the new fresh access token
+  - Replays the previous failed Request with the new/fresh access token
 
 ```js
 import createRefreshToken from "fetch-run/src/use/refresh-token";
@@ -198,7 +196,6 @@ api.use(createSetAccessToken("RefreshToken"));
 ### Normalize Response
 
   - Normalizes responses with [normalizr](https://github.com/paularmstrong/normalizr)
-  - __Note__: You need to install `normalizr`
 
 ```js
 import createNormalize from "fetch-run/src/use/normalize";
@@ -223,3 +220,4 @@ const mapSchema = {
 api.use(createNormalize(mapSchema));
 ```
 
+_Note_: You need to install `normalizr`.
