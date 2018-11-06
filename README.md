@@ -222,3 +222,11 @@ api.use(createNormalize(mapSchema));
 ```
 
 _Note_: You need to install [normalizr](https://github.com/paularmstrong/normalizr).
+
+## Polyfills
+
+`fetch-run` requires the following polyfills when applicable:
+
+  - [fetch](https://github.com/github/fetch)
+  - [URL](https://github.com/jsdom/whatwg-url)
+
