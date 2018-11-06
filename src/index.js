@@ -6,6 +6,10 @@ export default class Http {
     this.runThrough = null;
   }
 
+  // Workaround:
+  // https://stackoverflow.com/questions/44720448/fetch-typeerror-failed-to-execute-fetch-on-window-illegal-invocation
+  fetch = req => fetch(req);
+
   use(middleware) {
     this.middlewares.unshift(middleware);
   }
@@ -44,7 +48,7 @@ export default class Http {
 
   run(req) {
     if (!this.runThrough) {
-      this.runThrough = compose(...this.middlewares)(fetch);
+      this.runThrough = compose(...this.middlewares)(this.fetch);
     }
 
     return this.runThrough(req);
