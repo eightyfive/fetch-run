@@ -1,5 +1,9 @@
 let accessToken;
 
+export function setAccessToken(token) {
+  accessToken = token;
+}
+
 export default function createSetAccessToken(key = "access_token") {
   return next => async req => {
     if (accessToken) {

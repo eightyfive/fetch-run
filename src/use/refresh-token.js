@@ -1,5 +1,10 @@
 let refreshToken;
 
+
+export function setRefreshToken(token) {
+  refreshToken = token;
+}
+
 export default function createRefreshToken(key = "refresh_token") {
   return next => async req => {
     let res;
