@@ -205,7 +205,7 @@ const userSchema = new schema.Entity("users");
 const messageSchema = new schema.Entity("messages");
 
 const mapSchema = {
-  prefix: "api/v1",
+  _prefix: "api/v1",
 
   get: {
     "^chats/d+/messages$": [messageSchema],

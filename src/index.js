@@ -1,29 +1,10 @@
-const defaultHeaders = {
-  Accept: "application/json",
-  "Content-Type": "application/json"
-};
-
 export default class Http {
-  constructor(baseUri, headers = defaultHeaders) {
+  constructor(baseUri) {
     this.baseUri = baseUri;
-    this.headers = { ...headers };
 
     this.middlewares = [];
     this.runThrough = null;
   }
-
-  fetch = req => {
-    return fetch(req).then(res => {
-      if (res.status >= 200 && res.status < 300) {
-        return res.json();
-      }
-
-      const err = new Error(res.statusText);
-      err.response = res;
-
-      throw err;
-    });
-  };
 
   use(middleware) {
     this.middlewares.unshift(middleware);
@@ -54,7 +35,7 @@ export default class Http {
     // https://developer.mozilla.org/en-US/docs/Web/API/Request/Request
     const req = new Request(this.getUrl(pathname), {
       method,
-      headers: new Headers(this.headers),
+      headers: new Headers(),
       body: data ? JSON.stringify(data) : undefined
     });
 
@@ -63,7 +44,7 @@ export default class Http {
 
   run(req) {
     if (!this.runThrough) {
-      this.runThrough = compose(...this.middlewares)(this.fetch);
+      this.runThrough = compose(...this.middlewares)(fetch);
     }
 
     return this.runThrough(req);
@@ -86,12 +67,9 @@ export default class Http {
     }
 
     // Headers
-    const headers = new Headers(this.headers);
-    headers.delete("Content-Type");
-
     const req = new Request(this.getUrl(pathname), {
       method: "POST",
-      headers,
+      headers: new Headers(),
       body: formData
     });
 

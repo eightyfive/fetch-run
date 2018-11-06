@@ -1,24 +1,21 @@
+export class HttpError extends Error {}
+
+const _mapError = json => ({ data: json });
+
 export default function createErrorHandler(mapError = _mapError) {
   return next => async req => {
-    try {
-      return await next(req);
-    } catch (err) {
-      if (err.response) {
-        console.log(err);
+    const res = await next(req);
 
-        Object.assign(err, mapError(await err.response.json()));
-      } else {
-        console.error(err);
-      }
+    if (res.status < 200 || res.status >= 300) {
+      const err = new HttpError(res.statusText);
+
+      err.response = res;
+
+      Object.assign(err, mapError(await err.response.json()));
 
       throw err;
     }
-  };
-}
 
-function _mapError(json) {
-  return {
-    name: "HttpError",
-    data: json
+    return res;
   };
 }
