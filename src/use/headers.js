@@ -27,12 +27,3 @@ export default function createSetHeaders(headers) {
     return next(req);
   };
 }
-
-const headers = {
-  _prefix: "api/v1",
-
-  "*": {
-    Accept: "application/json",
-    "Content-Type": "application/json"
-  }
-};

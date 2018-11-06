@@ -134,10 +134,10 @@ Don't hesistate to browse the [source code of middlewares](https://github.com/ei
 
 ### Error management
 
-- Catches HTTP errors (status code > 299)
-- (Logs error in console)
-- Attaches server response to [`Error`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error)
--  Re-throws `Error`
+- Catches HTTP responses with error status code (`< 200 || >= 300`)
+- Creates a custom `HttpError` (extends [`Error`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error))
+- Attaches server response to `HttpError`
+- Throws `HttpError`
 
 ```js
 import createErrorHandler from "fetch-run/src/use/error";
