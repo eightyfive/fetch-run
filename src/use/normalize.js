@@ -4,7 +4,7 @@ export default function createNormalize(mapSchema) {
   return next => async req => {
     const json = await next(req);
     const url = new URL(req.url);
-    const prefix = mapSchema.prefix ? `/${mapSchema.prefix}/` : "/";
+    const prefix = mapSchema._prefix ? `/${mapSchema._prefix}/` : "/";
     const pathname = url.pathname.replace(prefix, "");
 
     const schema =

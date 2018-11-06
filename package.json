@@ -1,6 +1,6 @@
 {
   "name": "fetch-run",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Fetch middlewares for API endpoints",
   "main": "src/index.js",
   "scripts": {
