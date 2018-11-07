@@ -37,12 +37,13 @@ export default class Http {
   }
 
   request(method, pathname, data) {
+    const isGet = method === "GET";
+
     // https://developer.mozilla.org/en-US/docs/Web/API/Request
-    // https://developer.mozilla.org/en-US/docs/Web/API/Request/Request
-    const req = new Request(this.getUrl(pathname), {
+    const req = new Request(this.getUrl(pathname, isGet ? data : undefined), {
       method,
       headers: new Headers(),
-      body: data ? JSON.stringify(data) : undefined
+      body: data && !isGet ? JSON.stringify(data) : undefined
     });
 
     return this.run(req);
@@ -56,8 +57,16 @@ export default class Http {
     return this.runFetch(req);
   }
 
-  getUrl(pathname) {
-    return `${this.baseUri}/${pathname}`;
+  getUrl(pathname, data) {
+    let url = `${this.baseUri}/${pathname}`;
+
+    if (data) {
+      const query = Object.keys(data).map(key => `${key}=${data[key]}`);
+
+      url = `${url}?${query}`;
+    }
+
+    return url;
   }
 
   getAccessToken() {
