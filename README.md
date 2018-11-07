@@ -228,5 +228,14 @@ _Note_: You need to install [normalizr](https://github.com/paularmstrong/normali
 `fetch-run` requires the following polyfills when applicable:
 
   - [fetch](https://github.com/github/fetch)
-  - [URL](https://github.com/jsdom/whatwg-url)
+  - [URL](https://github.com/lifaon74/url-polyfill)
+
+```
+$ yarn add whatwg-fetch url-polyfill
+
+// <your-app>/src/services/api.js
+import "whatwg-fetch";
+import "url-polyfill";
+// ...
+```
 

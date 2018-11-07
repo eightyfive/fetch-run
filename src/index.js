@@ -3,7 +3,9 @@ export default class Http {
     this.baseUri = baseUri;
 
     this.middlewares = [];
-    this.runThrough = null;
+    this._accessToken = null;
+    this._refreshToken = null;
+    this.runFetch = null;
   }
 
   // Workaround:
@@ -47,15 +49,31 @@ export default class Http {
   }
 
   run(req) {
-    if (!this.runThrough) {
-      this.runThrough = compose(...this.middlewares)(this.fetch);
+    if (!this.runFetch) {
+      this.runFetch = compose(...this.middlewares)(this.fetch);
     }
 
-    return this.runThrough(req);
+    return this.runFetch(req);
   }
 
   getUrl(pathname) {
     return `${this.baseUri}/${pathname}`;
+  }
+
+  getAccessToken() {
+    return this._accessToken;
+  }
+
+  setAccessToken(token) {
+    this._accessToken = token;
+  }
+
+  getRefreshToken() {
+    return this._refreshToken;
+  }
+
+  setRefreshToken(token) {
+    this._refreshToken = token;
   }
 
   refreshToken(token) {

@@ -1,20 +1,17 @@
-let accessToken;
-
-export function setAccessToken(token) {
-  accessToken = token;
-}
 
 export default function createSetAccessToken(key = "access_token") {
   return next => async req => {
-    if (accessToken) {
+    const token = this.getAccessToken();
+
+    if (token) {
       // Use `set` instead of `append` to always use most recent token
-      req.headers.set("Authorization", `Bearer ${accessToken}`);
+      req.headers.set("Authorization", `Bearer ${token}`);
     }
 
     const res = await next(req);
 
     if (res[key]) {
-      accessToken = res[key];
+      this.setAccessToken(res[key]);
     }
 
     return res;
