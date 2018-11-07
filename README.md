@@ -63,6 +63,45 @@ A simple implementation of the middleware pattern in order to modify the [Reques
 
 A good way to visualize the middleware pattern is to think of the Request/Response lifecycle [as an onion](https://www.google.com/search?q=middleware+onion&tbm=isch). Every middleware added being a new onion layer.
 
+### Everything is a middleware
+
+Everything is a middleware, for example `fetch-run` does not assume you want to want to convert all your API responses to json. In order to do so, you have to include _explicitly_ the appropriate middleware:
+
+```js
+import Http from "fetch-run";
+import jsonResponse from "fetch-run/src/use/json";
+// ...
+
+export default Api extends Http {
+  // ...
+}
+
+// ...
+
+const api = new Api(baseUri);
+
+api.use(jsonResponse);
+// ...
+```
+
+Here is a sneak peak at what is doing the `jsonResponse` middleware:
+
+```js
+export default function jsonResponse(next) {
+  return async req => {
+    const res = await next(req);
+
+    if (res.status >= 200 && res.status < 300) {
+      return await res.json();
+    }
+
+    return res;
+  };
+}
+```
+
+Since everything is a middleware, that's why the [order of execution](https://github.com/eightyfive/fetch-run#execution-order-lifo) is important.
+
 ### `Request`/`Response`
 
 `fetch-run` uses [fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) Web APIs standards:
@@ -76,7 +115,7 @@ A good way to visualize the middleware pattern is to think of the Request/Respon
 Let's write a simple middleware that remembers an "Access Token" and sets it automatically on the Request once available.
 
 ```js
-// src/services/http/access-token.js
+// <your-app>/src/services/http/access-token.js
 
 let accessToken;
 
@@ -130,21 +169,57 @@ _Note_: `B` is the most outer layer of the [onion](https://www.google.com/search
 
 ## Included middlewares
 
-Don't hesistate to browse the [source code of middlewares](https://github.com/eightyfive/fetch-run/tree/master/src/use), it's very instrcutive and relatively simple to understand.
+These are simple middlewares that may not fullfilled all your needs and that's why you are welcome to write your owns. They almost serve more as examples / [learning material](https://github.com/eightyfive/fetch-run/tree/master/src/use).
+
+### Headers
+
+  - Sets common headers based on current URI
+
+```js
+import createSetHeaders from "fetch-run/src/use/headers";
+
+const headers = {
+  _prefix: "api/v1",
+
+  "*": {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    "X-AppVersion": config.API_VERSION,
+    "X-Platform": Platform.OS
+  },
+
+  "^xml/.+$": {
+    Accept: "application/xml",
+    "Content-Type": "application/xml",
+  }
+};
+
+api.use(createSetHeaders(headers));
+```
+
+### Json response
+
+  - Converts response to JSON
+
+```js
+import jsonResponse from "fetch-run/src/use/json";
+
+api.use(jsonResponse);
+```
 
 ### Error management
 
-- Catches HTTP responses with error status code (`< 200 || >= 300`)
-- Creates a custom `HttpError` (extends [`Error`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error))
-- Attaches server response to `HttpError`
-- Throws `HttpError`
+  - Catches HTTP responses with error status code (`< 200 || >= 300`)
+  - Creates a custom `HttpError` (extends [`Error`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error))
+  - Attaches server response to `HttpError`
+  - Throws `HttpError`
 
 ```js
 import createErrorHandler from "fetch-run/src/use/error";
 
 api.use(createErrorHandler());
 
-// Later in app, when you catch the `err`, `err.data` will contains the JSON error server response.
+// Later in app, when you catch the `err`, `err.data` will contains the JSON error server response (`err.response` also available).
 ```
 
 You can pass a custom function that maps the server response to the `Error`:
@@ -166,13 +241,21 @@ api.use(createErrorHandler(json => ({
 ```js
 import createSetAccessToken from "fetch-run/src/use/access-token";
 
-api.use(createSetAccessToken());
+api.use(createSetAccessToken.call(api));
 ```
 
 You can pass the access token identifier in Response (default is `"access_token"`):
 
 ```js
-api.use(createSetAccessToken("AccessToken"));
+api.use(createSetAccessToken.call(api, "AccessToken"));
+```
+
+_Note_: This middleware needs to be called with `api` context (`.call(api)`):
+
+_Note_: If you need to initialize `accessToken` value (typically rehydration):
+
+```js
+api.setAccessToken(token);
 ```
 
 ### Refresh Token
@@ -184,13 +267,21 @@ api.use(createSetAccessToken("AccessToken"));
 ```js
 import createRefreshToken from "fetch-run/src/use/refresh-token";
 
-api.use(createRefreshToken());
+api.use(createRefreshToken.call(api));
 ```
 
 You can pass the refresh token identifier in Response (default is `"refresh_token"`):
 
 ```js
-api.use(createSetAccessToken("RefreshToken"));
+api.use(createRefreshToken.call(api, "RefreshToken"));
+```
+
+_Note_: This middleware needs to be called with `api` context (`.call(api)`):
+
+_Note_: If you need to initialize `refreshToken` value (typically rehydration):
+
+```js
+api.setRefreshToken(token);
 ```
 
 ### Normalize Response
@@ -239,3 +330,6 @@ import "url-polyfill";
 // ...
 ```
 
+## `Http` API
+
+TODO
