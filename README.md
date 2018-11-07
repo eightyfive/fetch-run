@@ -65,42 +65,18 @@ A good way to visualize the middleware pattern is to think of the Request/Respon
 
 ### Everything is a middleware
 
-Everything is a middleware, for example `fetch-run` does not assume you want to want to convert all your API responses to json. In order to do so, you have to include _explicitly_ the appropriate middleware:
+For example `fetch-run` does not assume you want to want to convert all your API responses to `json`. In order to do so, you have to _explicitly_ include the appropriate middleware:
 
 ```js
-import Http from "fetch-run";
 import jsonResponse from "fetch-run/src/use/json";
-// ...
-
-export default Api extends Http {
-  // ...
-}
-
 // ...
 
 const api = new Api(baseUri);
 
 api.use(jsonResponse);
-// ...
 ```
 
-Here is a sneak peak at what is doing the `jsonResponse` middleware:
-
-```js
-export default function jsonResponse(next) {
-  return async req => {
-    const res = await next(req);
-
-    if (res.status >= 200 && res.status < 300) {
-      return await res.json();
-    }
-
-    return res;
-  };
-}
-```
-
-Since everything is a middleware, that's why the [order of execution](https://github.com/eightyfive/fetch-run#execution-order-lifo) is important.
+Since everything is a middleware, the [order of execution](https://github.com/eightyfive/fetch-run#execution-order-lifo) is important.
 
 ### `Request`/`Response`
 
