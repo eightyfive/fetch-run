@@ -6,6 +6,7 @@ export default class Http {
     this._accessToken = null;
     this._refreshToken = null;
     this.runFetch = null;
+    this.refreshing = false;
   }
 
   // Workaround:
