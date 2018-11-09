@@ -1,6 +1,8 @@
+import parseUrl from "../parse-url";
+
 export default function createSetHeaders(headers) {
   return next => async req => {
-    const url = new URL(req.url);
+    const url = parseUrl(req.url);
     const prefix = headers._prefix ? `/${headers._prefix}/` : "/";
     const pathname = url.pathname.replace(prefix, "");
 

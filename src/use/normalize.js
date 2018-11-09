@@ -1,9 +1,11 @@
 import { normalize } from "normalizr";
+//
+import parseUrl from "../parse-url";
 
 export default function createNormalize(mapSchema) {
   return next => async req => {
     const json = await next(req);
-    const url = new URL(req.url);
+    const url = parseUrl(req.url);
     const prefix = mapSchema._prefix ? `/${mapSchema._prefix}/` : "/";
     const pathname = url.pathname.replace(prefix, "");
 
