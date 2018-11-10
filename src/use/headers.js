@@ -21,7 +21,7 @@ export default function createSetHeaders(headers) {
 
       if (re.test(pathname)) {
         for (let name in headers[pattern]) {
-          req.headers.append(name, headers[pattern][name]);
+          req.headers.set(name, headers[pattern][name]);
         }
       }
     }

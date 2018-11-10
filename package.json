@@ -1,6 +1,6 @@
 {
   "name": "fetch-run",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "Fetch middlewares for API endpoints",
   "main": "src/index.js",
   "scripts": {
@@ -16,5 +16,7 @@
     "onchange": "^5.1.0",
     "prettier": "^1.14.3"
   },
-  "dependencies": {}
+  "dependencies": {
+    "npm": "^6.4.1"
+  }
 }
