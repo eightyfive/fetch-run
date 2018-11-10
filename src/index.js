@@ -62,7 +62,7 @@ export default class Http {
     let url = `${this.baseUri}/${pathname}`;
 
     if (data) {
-      const query = Object.keys(data).map(key => `${key}=${data[key]}`);
+      const query = Object.keys(data).map(key => `${key}=${data[key]}`).join("&");
 
       url = `${url}?${query}`;
     }
