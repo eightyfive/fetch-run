@@ -11,7 +11,7 @@ export default function createErrorHandler(mapError = _mapError) {
 
       err.response = res;
 
-      Object.assign(err, mapError(await err.response.json()));
+      Object.assign(err, mapError(await res.json(), res.status));
 
       throw err;
     }
