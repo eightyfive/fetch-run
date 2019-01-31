@@ -13,15 +13,7 @@ export default class Http {
 
   // Workaround:
   // https://stackoverflow.com/questions/44720448/fetch-typeerror-failed-to-execute-fetch-on-window-illegal-invocation
-  fetch = async req => {
-    try {
-      return await fetch(req);
-    } catch (err) {
-      this.errorHandlers.forEach(handler => handler(err));
-
-      throw err;
-    }
-  };
+  fetch = req => fetch(req);
 
   onError(handler) {
     this.errorHandlers.push(handler);
@@ -64,12 +56,18 @@ export default class Http {
     return this.run(req);
   }
 
-  run(req) {
+  async run(req) {
     if (!this.runFetch) {
       this.runFetch = compose(...this.middlewares)(this.fetch);
     }
 
-    return this.runFetch(req);
+    try {
+      return await this.runFetch(req);
+    } catch (err) {
+      this.errorHandlers.forEach(handler => handler(err));
+
+      throw err;
+    }
   }
 
   getUrl(pathname, data) {
