@@ -5,7 +5,7 @@ export default function httpError(next) {
     const res = await next(req);
 
     if (res.status < 200 || res.status >= 300) {
-      throw new HttpError(res);
+      throw new HttpError(res, await res.json());
     }
 
     return res;
