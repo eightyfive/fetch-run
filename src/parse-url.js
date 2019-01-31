@@ -3,12 +3,12 @@
 
 const reURL = new RegExp(
   [
-    "^(https?:)//", // protocol
-    "(([^:/?#]*)(?::([0-9]+))?)", // host (hostname and port)
-    "(/{0,1}[^?#]*)", // pathname
-    "(\\?[^#]*|)", // search
-    "(#.*|)$" // hash
-  ].join("")
+    '^(https?:)//', // protocol
+    '(([^:/?#]*)(?::([0-9]+))?)', // host (hostname and port)
+    '(/{0,1}[^?#]*)', // pathname
+    '(\\?[^#]*|)', // search
+    '(#.*|)$', // hash
+  ].join('')
 );
 
 export default function parseUrl(url) {
@@ -22,7 +22,7 @@ export default function parseUrl(url) {
       port: match[4],
       pathname: match[5],
       search: match[6],
-      hash: match[7]
+      hash: match[7],
     }
   );
 }
