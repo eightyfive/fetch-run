@@ -1,4 +1,6 @@
 export default class Http {
+  errorHandlers = [];
+
   constructor(baseUri) {
     this.baseUri = baseUri;
 
@@ -11,7 +13,19 @@ export default class Http {
 
   // Workaround:
   // https://stackoverflow.com/questions/44720448/fetch-typeerror-failed-to-execute-fetch-on-window-illegal-invocation
-  fetch = req => fetch(req);
+  fetch = async req => {
+    try {
+      return await fetch(req);
+    } catch (err) {
+      this.errorHandlers.forEach(handler => handler(err));
+
+      throw err;
+    }
+  };
+
+  onError(handler) {
+    this.errorHandlers.push(handler);
+  }
 
   use(middleware) {
     this.middlewares.unshift(middleware);
