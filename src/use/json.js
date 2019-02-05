@@ -1,12 +1,11 @@
-const regExp = /([\/+])json$/;
+const isJson = /([\/+])json$/;
 
 export default function jsonResponse(next) {
   return async req => {
     const res = await next(req);
-    const contentType = res.headers.get("Content-Type");
-    const isJson = regExp.test(contentType);
+    const contentType = res.headers.get('Content-Type');
 
-    if (res.status >= 200 && res.status < 300 && isJson) {
+    if (isJson.test(contentType) && res.status >= 200 && res.status < 300) {
       return await res.json();
     }
 
