@@ -45,13 +45,18 @@ export default class Http {
 
   request(method, pathname, data) {
     const isGet = method === 'GET';
-
-    // https://developer.mozilla.org/en-US/docs/Web/API/Request
-    const req = new Request(this.getUrl(pathname, isGet ? data : undefined), {
+    const url = this.getUrl(pathname, isGet ? data : undefined);
+    const options = {
       method,
       headers: new Headers(),
-      body: data && !isGet ? JSON.stringify(data) : undefined,
-    });
+    };
+
+    if (data && !isGet) {
+      options.body = data instanceof FormData ? data : JSON.stringify(data);
+    }
+
+    // https://developer.mozilla.org/en-US/docs/Web/API/Request
+    const req = new Request(url, options);
 
     return this.run(req);
   }
@@ -102,24 +107,6 @@ export default class Http {
 
   refreshToken(token) {
     return this.post('oauth/token', { refresh_token: token });
-  }
-
-  upload(pathname, data) {
-    // Body
-    const formData = new FormData();
-
-    for (let key in data) {
-      formData.append(key, data[key]);
-    }
-
-    // Headers
-    const req = new Request(this.getUrl(pathname), {
-      method: 'POST',
-      headers: new Headers(),
-      body: formData,
-    });
-
-    return this.run(req);
   }
 }
 
