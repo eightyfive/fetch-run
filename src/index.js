@@ -1,12 +1,11 @@
 export default class Http {
   errorHandlers = [];
+  middlewares = [];
+  runFetch = null;
 
   constructor(baseUrl, headers = {}) {
     this.baseUrl = baseUrl;
     this.headers = headers;
-
-    this.middlewares = [];
-    this.runFetch = null;
   }
 
   // Workaround:
@@ -67,9 +66,11 @@ export default class Http {
     try {
       return await this.runFetch(req);
     } catch (err) {
-      this.errorHandlers.forEach(handler => handler(err));
-
-      throw err;
+      if (this.errorHandlers.length) {
+        this.errorHandlers.forEach(handler => handler(err));
+      } else {
+        throw err;
+      }
     }
   }
 
