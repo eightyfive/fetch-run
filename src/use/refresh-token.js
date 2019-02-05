@@ -1,5 +1,11 @@
+let refreshToken;
+let refreshing = false;
 
-export default function createRefreshToken(key = "refresh_token") {
+export function setRefreshToken(token) {
+  refreshToken = token;
+}
+
+export default function createRefreshToken(key = 'refresh_token') {
   return next => async req => {
     let res;
     let _req = req.clone();
@@ -8,18 +14,16 @@ export default function createRefreshToken(key = "refresh_token") {
       res = await next(req);
 
       if (res[key]) {
-        this.setRefreshToken(res[key]);
+        refreshToken = res[key];
       }
     } catch (err) {
-      const token = this.getRefreshToken();
-
-      if (err.response && err.response.status === 401 && token) {
-        if (!this.refreshing) {
-          this.refreshing = true;
-          await this.refreshToken(token);
+      if (refreshToken && err.response && err.response.status === 401) {
+        if (!refreshing) {
+          refreshing = true;
+          await this.refreshToken(refreshToken);
           res = await this.run(_req);
         } else {
-          this.refreshing = false;
+          refreshing = false;
           throw err;
         }
       } else {

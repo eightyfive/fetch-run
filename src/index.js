@@ -5,10 +5,7 @@ export default class Http {
     this.baseUri = baseUri;
 
     this.middlewares = [];
-    this._accessToken = null;
-    this._refreshToken = null;
     this.runFetch = null;
-    this.refreshing = false;
   }
 
   // Workaround:
@@ -87,22 +84,6 @@ export default class Http {
     }
 
     return url;
-  }
-
-  getAccessToken() {
-    return this._accessToken;
-  }
-
-  setAccessToken(token) {
-    this._accessToken = token;
-  }
-
-  getRefreshToken() {
-    return this._refreshToken;
-  }
-
-  setRefreshToken(token) {
-    this._refreshToken = token;
   }
 
   refreshToken(token) {
