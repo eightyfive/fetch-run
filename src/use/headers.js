@@ -1,25 +1,21 @@
 import parseUrl from '../parse-url';
 
-export default function createSetHeaders(headers) {
+export default function createSetHeaders(config) {
   return next => async req => {
     const url = parseUrl(req.url);
-    const prefix = headers._prefix ? `/${headers._prefix}/` : '/';
+    const prefix = config._prefix ? `/${config._prefix}/` : '/';
     const pathname = url.pathname.replace(prefix, '');
+    const reqMethod = req.method.toLowerCase();
 
-    for (let method in headers) {
-      if (method.indexOf('_') === 0) {
-        continue;
-      }
+    for (let method in config) {
+      if (method.indexOf('_') === 0) continue;
+      if (method !== reqMethod) continue;
 
-      if (method === '*') {
-        setHeaders(req, headers[method]);
-      } else if (method === req.method.toLowerCase()) {
-        for (let pattern in headers[method]) {
-          const re = new RegExp(pattern);
+      for (let pattern in config[method]) {
+        const re = new RegExp(pattern);
 
-          if (re.test(pathname)) {
-            setHeaders(req, headers[method][pattern]);
-          }
+        if (re.test(pathname)) {
+          setHeaders(req, config[method][pattern]);
         }
       }
     }

@@ -1,8 +1,9 @@
 export default class Http {
   errorHandlers = [];
 
-  constructor(baseUri) {
-    this.baseUri = baseUri;
+  constructor(baseUrl, headers = {}) {
+    this.baseUrl = baseUrl;
+    this.headers = headers;
 
     this.middlewares = [];
     this.runFetch = null;
@@ -45,7 +46,7 @@ export default class Http {
     const url = this.getUrl(pathname, isGet ? data : undefined);
     const options = {
       method,
-      headers: new Headers(),
+      headers: new Headers(this.headers),
     };
 
     if (data && !isGet) {
@@ -73,7 +74,7 @@ export default class Http {
   }
 
   getUrl(pathname, data) {
-    let url = `${this.baseUri}/${pathname}`;
+    let url = `${this.baseUrl}/${pathname}`;
 
     if (data) {
       const query = Object.keys(data)
