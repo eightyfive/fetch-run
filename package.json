@@ -1,6 +1,6 @@
 {
   "name": "fetch-run",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Fetch middlewares for API endpoints",
   "scripts": {
     "format:watch": "onchange 'src/**/*.js' -- prettier --write {{changed}}",

@@ -23,6 +23,7 @@ export default function createRefreshToken(key = 'refresh_token') {
           await this.refreshToken(refreshToken);
           res = await this.run(_req);
         } else {
+          refreshToken = null;
           refreshing = false;
           throw err;
         }
