@@ -67,10 +67,10 @@ export default class Http {
       return await this.runFetch(req);
     } catch (err) {
       if (this.errorHandlers.length) {
-        this.errorHandlers.forEach(handler => handler(err));
-      } else {
-        throw err;
+        await Promise.all(this.errorHandlers.map(handler => handler(err)));
       }
+
+      throw err;
     }
   }
 
