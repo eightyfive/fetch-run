@@ -3,7 +3,6 @@
   "version": "0.2.4",
   "description": "Fetch middlewares for API endpoints",
   "scripts": {
-    "format:watch": "onchange 'src/**/*.js' -- prettier --write {{changed}}",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -11,10 +10,7 @@
   ],
   "author": "Benoit Sagols",
   "license": "ISC",
-  "devDependencies": {
-    "onchange": "^5.1.0",
-    "prettier": "^1.16.2"
-  },
+  "devDependencies": {},
   "dependencies": {
     "npm": "^6.4.1"
   }
