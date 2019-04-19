@@ -2,7 +2,7 @@
 
 ## What?
 
-`fetch-run` is a small utility `class` to help deal with common use cases regarding targeting REST API endpoints.
+`fetch-run` is a small utility `class` that helps you deal with common use cases of targeting API endpoints.
 
 Namely:
 
@@ -17,8 +17,6 @@ $ yarn add fetch-run
 ```
 
 ## Usage
-
-While it's possible to use the `class Http` itself directly, it is recommended to `extend` it for cleaner API definition (plain method names provide better abstraction of your API URLs):
 
 ```js
 // <your-app>/src/services/api.js
@@ -59,15 +57,15 @@ export default api;
 
 ## Middlewares
 
-A simple implementation of the HTTP middleware pattern. It allows you to modify the [Request object](https://developer.mozilla.org/en-US/docs/Web/API/Request) before your API call and use the [Response object](https://developer.mozilla.org/en-US/docs/Web/API/Response) right after receiving the response from the server.
+A simple implementation of the middleware pattern. It allows you to modify the [Request object](https://developer.mozilla.org/en-US/docs/Web/API/Request) before your API call and use the [Response object](https://developer.mozilla.org/en-US/docs/Web/API/Response) right after receiving the response from the server.
 
-Here is more information about the HTTP middleware pattern:
+Here is more information about the middleware pattern:
 
 - [Using Express middleware](https://expressjs.com/en/guide/using-middleware.html)
 - [Middleware - Laravel](https://laravel.com/docs/5.7/middleware)
 - [Middleware - Redux](https://redux.js.org/advanced/middleware)
 
-A good way to visualize the HTTP middleware pattern is to think of the Request/Response lifecycle [as an onion](https://www.google.com/search?q=middleware+onion&tbm=isch). Every middleware added being a new onion layer on top of the previous one.
+A good way to visualize the middleware pattern is to think of the Request/Response lifecycle [as an onion](https://www.google.com/search?q=middleware+onion&tbm=isch). Every middleware added being a new onion layer on top of the previous one.
 
 ### Everything is a middleware
 
@@ -179,6 +177,8 @@ const headers = {
 api.use(createSetHeaders(headers));
 ```
 
+[Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/headers.js)
+
 ### Json response
 
 - Converts response to JSON
@@ -189,20 +189,7 @@ import jsonResponse from 'fetch-run/src/use/json';
 api.use(jsonResponse);
 ```
 
-```js
-export default function jsonResponse(next) {
-  return async req => {
-    const res = await next(req);
-    const contentType = res.headers.get('Content-Type');
-
-    if (isJson.test(contentType) && res.status >= 200 && res.status < 300) {
-      return await res.json();
-    }
-
-    return res;
-  };
-}
-```
+[Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/json.js)
 
 ### HTTP Error
 
@@ -219,19 +206,7 @@ api.use(httpError());
 // Later in app, when you catch the `err`, `err.data` will contains the JSON error server response (`err.response` also available).
 ```
 
-```js
-export default function httpError(next) {
-  return async req => {
-    const res = await next(req);
-
-    if (res.status < 200 || res.status >= 300) {
-      throw new HttpError(res, await res.json());
-    }
-
-    return res;
-  };
-}
-```
+[Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/error.js)
 
 ### Access Token
 
@@ -258,24 +233,7 @@ _Note_: If you need to initialize `accessToken` value (typically rehydration):
 api.setAccessToken(token);
 ```
 
-```js
-export default function createSetAccessToken(key = 'access_token') {
-  return next => async req => {
-    if (accessToken) {
-      // Use `set` instead of `append` to always use most recent token
-      req.headers.set('Authorization', `Bearer ${accessToken}`);
-    }
-
-    const res = await next(req);
-
-    if (res[key]) {
-      accessToken = res[key];
-    }
-
-    return res;
-  };
-}
-```
+[Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/access-token.js)
 
 ### Refresh Token
 
@@ -302,6 +260,8 @@ _Note_: If you need to initialize `refreshToken` value (typically rehydration):
 ```js
 api.setRefreshToken(token);
 ```
+
+[Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/refresh-token.js)
 
 ### Normalize Response
 
@@ -330,6 +290,8 @@ const mapSchema = {
 
 api.use(createNormalize(mapSchema));
 ```
+
+[Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/normalize.js)
 
 _Note_: You need to install [normalizr](https://github.com/paularmstrong/normalizr).
 
