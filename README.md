@@ -1,8 +1,6 @@
 # `fetch-run`
 
-## What?
-
-`fetch-run` is a small utility `class` that helps you deal with common use cases of targeting API endpoints.
+`fetch-run` is a small utility `class` that helps you deal with common use cases regarding targeting API endpoints.
 
 Namely:
 
@@ -156,7 +154,7 @@ These are simple middlewares that may not fullfilled all your needs and that's w
 - Sets common headers based on current URI
 
 ```js
-import createSetHeaders from 'fetch-run/src/use/headers';
+import { createSetHeaders } from 'fetch-run/use';
 
 const headers = {
   _prefix: 'api/v1',
@@ -184,7 +182,7 @@ api.use(createSetHeaders(headers));
 - Converts response to JSON
 
 ```js
-import jsonResponse from 'fetch-run/src/use/json';
+import { jsonResponse } from 'fetch-run/use';
 
 api.use(jsonResponse);
 ```
@@ -199,7 +197,7 @@ api.use(jsonResponse);
 - Throws `HttpError`
 
 ```js
-import httpError from 'fetch-run';
+import { httpError } from 'fetch-run/use';
 
 api.use(httpError());
 
@@ -214,7 +212,7 @@ api.use(httpError());
 - Automatically sets "Authorization" header (`Bearer <TOKEN>`) on Request once available
 
 ```js
-import createSetAccessToken from 'fetch-run';
+import { createSetAccessToken } from 'fetch-run/use';
 
 api.use(createSetAccessToken.call(api));
 ```
@@ -222,15 +220,16 @@ api.use(createSetAccessToken.call(api));
 You can pass the access token identifier in Response (default is `"access_token"`):
 
 ```js
-api.use(createSetAccessToken.call(api, 'AccessToken'));
+api.use(createSetAccessToken('AccessToken'));
 ```
 
-_Note_: This middleware needs to be called with `api` context (`.call(api)`):
-
-_Note_: If you need to initialize `accessToken` value (typically rehydration):
+_Note_: If you need to initialize the `accessToken` value (typically rehydration):
 
 ```js
-api.setAccessToken(token);
+import { setAccessToken } from 'fetch-run/use';
+
+// `token` retrieved from AsyncStorage for example
+setAccessToken(token);
 ```
 
 [Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/access-token.js)
@@ -253,12 +252,15 @@ You can pass the refresh token identifier in Response (default is `"refresh_toke
 api.use(createRefreshToken.call(api, 'RefreshToken'));
 ```
 
-_Note_: This middleware needs to be called with `api` context (`.call(api)`):
+_Note_: This middleware must be called with `api` context (`.call(api)`):
 
-_Note_: If you need to initialize `refreshToken` value (typically rehydration):
+_Note_: If you need to initialize the `refreshToken` value (typically rehydration):
 
 ```js
-api.setRefreshToken(token);
+import { setRefreshToken } from 'fetch-run/use';
+
+// `token` retrieved from AsyncStorage for example
+setRefreshToken(token);
 ```
 
 [Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/refresh-token.js)
@@ -269,7 +271,7 @@ api.setRefreshToken(token);
 
 ```js
 import { schema } from 'normalizr';
-import createNormalize from 'fetch-run/src/use/normalize';
+import { createNormalize } from 'fetch-run/use';
 
 const userSchema = new schema.Entity('users');
 const messageSchema = new schema.Entity('messages');
@@ -292,8 +294,6 @@ api.use(createNormalize(mapSchema));
 ```
 
 [Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/normalize.js)
-
-_Note_: You need to install [normalizr](https://github.com/paularmstrong/normalizr).
 
 ## Polyfills
 
