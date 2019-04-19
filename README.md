@@ -198,16 +198,19 @@ api.use(jsonResponse);
 import { httpError } from 'fetch-run/use';
 
 api.use(httpError());
-
-// Later in app, when you catch the `err`, `err.data` will contains the JSON error server response (`err.response` also available).
 ```
+
+Later in app, when you catch the `HttpError`:
+
+- `err.data` will contain the JSON server response
+- `err.response` the response.
 
 [Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/error.js)
 
 ### Access Token
 
 - Remembers access token as soon as it is available in Response
-- Automatically sets "Authorization" header (`Bearer <TOKEN>`) on Request once available
+- Automatically sets the `Authorization` header (`Bearer <TOKEN>`) on Request once available
 
 ```js
 import { createSetAccessToken } from 'fetch-run/use';
@@ -215,7 +218,7 @@ import { createSetAccessToken } from 'fetch-run/use';
 api.use(createSetAccessToken.call(api));
 ```
 
-You can pass the access token identifier in Response (default is `"access_token"`):
+You can pass a custom access token identifier in response (default is `"access_token"`):
 
 ```js
 api.use(createSetAccessToken('AccessToken'));
@@ -244,7 +247,7 @@ import createRefreshToken from 'fetch-run/src/use/refresh-token';
 api.use(createRefreshToken.call(api));
 ```
 
-You can pass the refresh token identifier in Response (default is `"refresh_token"`):
+You can pass a custom refresh token identifier in response (default is `"refresh_token"`):
 
 ```js
 api.use(createRefreshToken.call(api, 'RefreshToken'));
