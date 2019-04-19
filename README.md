@@ -1,8 +1,6 @@
 # `fetch-run`
 
-`fetch-run` is a small utility `class` that helps you deal with common use cases regarding targeting API endpoints.
-
-Namely:
+`fetch-run` is a small utility `class` that helps you deal with your API endpoints:
 
 - Explicitly & easily define all you API endpoints
 - Run your API calls through a middleware stack
