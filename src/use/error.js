@@ -1,13 +1,16 @@
+import { isJson } from '../utils';
 import HttpError from '../http-error';
 
 export default function httpError(next) {
-  return async req => {
-    const res = await next(req);
+	return async req => {
+		const res = await next(req);
 
-    if (res.status < 200 || res.status >= 300) {
-      throw new HttpError(res, await res.json());
-    }
+		if (res.status < 200 || res.status >= 300) {
+			const data = isJson(res) ? await res.json() : null;
 
-    return res;
-  };
+			throw new HttpError(res, data);
+		}
+
+		return res;
+	};
 }
