@@ -1,7 +1,7 @@
 {
   "name": "fetch-run",
-  "version": "0.3.0",
-  "description": "Fetch middlewares for API endpoints",
+  "version": "0.4.0",
+  "description": "Fetch middleware",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

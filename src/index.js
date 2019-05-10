@@ -1,5 +1,4 @@
 export default class Http {
-  errorHandlers = [];
   middlewares = [];
   runFetch = null;
 
@@ -8,45 +7,52 @@ export default class Http {
     this.headers = headers;
   }
 
+  setHeader(name, value) {
+    this.headers[name] = value;
+  }
+
+  setBearer(token) {
+    this.setHeader('Authorization', `Bearer ${token}`);
+  }
+
   // Workaround:
   // https://stackoverflow.com/questions/44720448/fetch-typeerror-failed-to-execute-fetch-on-window-illegal-invocation
   fetch = req => fetch(req);
-
-  onError(handler) {
-    this.errorHandlers.push(handler);
-  }
 
   use(middleware) {
     this.middlewares.unshift(middleware);
   }
 
-  get(pathname, data) {
-    return this.request('GET', pathname, data);
+  get(pathname, data, options) {
+    return this.request('GET', pathname, data, options);
   }
 
-  post(pathname, data) {
-    return this.request('POST', pathname, data);
+  post(pathname, data, options) {
+    return this.request('POST', pathname, data, options);
   }
 
-  put(pathname, data) {
-    return this.request('PUT', pathname, data);
+  put(pathname, data, options) {
+    return this.request('PUT', pathname, data, options);
   }
 
-  patch(pathname, data) {
-    return this.request('PATCH', pathname, data);
+  patch(pathname, data, options) {
+    return this.request('PATCH', pathname, data, options);
   }
 
-  delete(pathname) {
-    return this.request('DELETE', pathname);
+  delete(pathname, options) {
+    return this.request('DELETE', pathname, undefined, options);
   }
 
-  request(method, pathname, data) {
+  request(method, pathname, data, options = {}) {
     const isGet = method === 'GET';
     const url = this.getUrl(pathname, isGet ? data : undefined);
-    const options = {
+
+    const headers = Object.assign({}, this.headers, options.headers);
+
+    Object.assign(options, {
       method,
-      headers: new Headers(this.headers),
-    };
+      headers: new Headers(headers),
+    });
 
     if (data && !isGet) {
       options.body = data instanceof FormData ? data : JSON.stringify(data);
@@ -63,15 +69,7 @@ export default class Http {
       this.runFetch = compose(...this.middlewares)(this.fetch);
     }
 
-    try {
-      return await this.runFetch(req);
-    } catch (err) {
-      if (this.errorHandlers.length) {
-        await Promise.all(this.errorHandlers.map(handler => handler(err)));
-      }
-
-      throw err;
-    }
+    return this.runFetch(req);
   }
 
   getUrl(pathname, data) {
@@ -86,10 +84,6 @@ export default class Http {
     }
 
     return url;
-  }
-
-  refreshToken(token) {
-    return this.post('oauth/token', { refresh_token: token });
   }
 }
 
