@@ -3,14 +3,17 @@
   "version": "0.4.0",
   "description": "Fetch middleware",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "format": "prettier --write 'src/**/*.js'"
   },
   "keywords": [
     "fetch"
   ],
   "author": "Benoit Sagols",
   "license": "ISC",
-  "devDependencies": {},
+  "devDependencies": {
+    "prettier": "^1.17.0"
+  },
   "dependencies": {
     "npm": "^6.4.1"
   }
