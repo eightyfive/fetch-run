@@ -1,7 +1,7 @@
 import { isJson } from '../utils';
 import HttpError from '../http-error';
 
-export default function httpError(next) {
+export default function errorMiddleware(next) {
   return async req => {
     const res = await next(req);
 

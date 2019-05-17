@@ -68,7 +68,7 @@ A good way to visualize the middleware pattern is to think of the Request/Respon
 For example `fetch-run` does not assume that you want to convert all your API responses to `json`. In order to do so, you have to _explicitly_ include the appropriate middleware:
 
 ```js
-import { jsonResponse } from 'fetch-run';
+import jsonResponse from 'fetch-run/use/json';
 // ...
 
 const api = new Api(baseUri);
@@ -143,49 +143,73 @@ Execution order:
 
 _Note_: `B` is the most outer layer of the [onion](https://www.google.com/search?q=middleware+onion&tbm=isch).
 
-## Included middlewares
+## `Http` API
 
-These are simple middlewares that may not fullfilled all your needs and that's why you are welcome to write your owns. They almost serve more as examples / [learning material](https://github.com/eightyfive/fetch-run/tree/master/src/use).
+### `use(middleware)`
 
-### Headers
+Adds a middleware to the stack. See [Middlewares](https://github.com/eightyfive/fetch-run#middlewares) and [Execution order (LIFO)](https://github.com/eightyfive/fetch-run#execution-order-lifo) for more information.
 
-- Sets common headers based on current URI
+### `get(pathname, options = {})`
+
+Performs a `GET` request. If you need to pass query parameters in the URL, use [`search`](https://github.com/eightyfive/fetch-run#search) instead.
+
+### `search(pathname, data, options = {})`
+
+Performs a `GET` request with additional query parameters passed in URL.
+
+### `post(pathname, data = {}, options = {})`
+
+Performs a `POST` request.
+
+### `put(pathname, data = {}, options = {})`
+
+Performs a `PUT` request.
+
+### `patch(pathname, data = {}, options = {})`
+
+Performs a `PATCH` request.
+
+### `delete(pathname, options = {})`
+
+Performs a `DELETE` request.
+
+### `options`
+
+All `options` are passed down the [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) object.
+
+#### `options._` (Meta)
+
+There is a special option `_` meant to hold "meta information". You can use it to [pass down information to middlewares](https://github.com/eightyfive/fetch-run#normalize-response).
+
+It is later attached to the `Request` object as `_meta`:
 
 ```js
-import { createSetHeaders } from 'fetch-run/use';
+export default function normalizrMiddleware(next) {
+  return async req => {
+    const json = await next(req);
 
-const headers = {
-  _prefix: 'api/v1',
+    const { schema } = req._meta;
 
-  '*': {
-    Accept: 'application/json',
-    'Content-Type': 'application/json',
-    'X-AppVersion': config.API_VERSION,
-    'X-Platform': Platform.OS,
-  },
-
-  '^xml/.+$': {
-    Accept: 'application/xml',
-    'Content-Type': 'application/xml',
-  },
-};
-
-api.use(createSetHeaders(headers));
+    return schema ? normalize(json, schema) : json;
+  };
+}
 ```
 
-[Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/headers.js)
+## Included middlewares
+
+These are simple middlewares that may not fullfilled all your needs and that's why you are welcome to write your owns. They almost serve more as examples / [learning material](https://github.com/eightyfive/fetch-run/tree/master/use).
 
 ### Json response
 
 - Converts response to JSON
 
 ```js
-import { jsonResponse } from 'fetch-run/use';
+import jsonResponse from 'fetch-run/use/json';
 
 api.use(jsonResponse);
 ```
 
-[Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/json.js)
+[Source code](https://github.com/eightyfive/fetch-run/blob/master/use/json.js)
 
 ### HTTP Error
 
@@ -195,9 +219,9 @@ api.use(jsonResponse);
 - Throws `HttpError`
 
 ```js
-import { httpError } from 'fetch-run/use';
+import httpError from 'fetch-run/use/error';
 
-api.use(httpError());
+api.use(httpError);
 ```
 
 Later in app, when you catch the `HttpError`:
@@ -205,113 +229,58 @@ Later in app, when you catch the `HttpError`:
 - `err.data` will contain the JSON server response
 - `err.response` the response.
 
-[Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/error.js)
+[Source code](https://github.com/eightyfive/fetch-run/blob/master/use/error.js)
 
-### Access Token
-
-- Remembers access token as soon as it is available in Response
-- Automatically sets the `Authorization` header (`Bearer <TOKEN>`) on Request once available
-
-```js
-import { createSetAccessToken } from 'fetch-run/use';
-
-api.use(createSetAccessToken.call(api));
-```
-
-You can pass a custom access token identifier in response (default is `"access_token"`):
-
-```js
-api.use(createSetAccessToken('AccessToken'));
-```
-
-_Note_: If you need to initialize the `accessToken` value (typically rehydration):
-
-```js
-import { setAccessToken } from 'fetch-run/use';
-
-// `token` retrieved from AsyncStorage for example
-setAccessToken(token);
-```
-
-[Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/access-token.js)
-
-### Refresh Token
-
-- Remembers refresh token as soon as it is available in Response
-- Refreshes access token if server responds with `401` status code (Unauthorized)
-- Replays the previous failed Request with the new/fresh access token
-
-```js
-import createRefreshToken from 'fetch-run/src/use/refresh-token';
-
-api.use(createRefreshToken.call(api));
-```
-
-You can pass a custom refresh token identifier in response (default is `"refresh_token"`):
-
-```js
-api.use(createRefreshToken.call(api, 'RefreshToken'));
-```
-
-_Note_: This middleware must be called with `api` context (`.call(api)`):
-
-_Note_: If you need to initialize the `refreshToken` value (typically rehydration):
-
-```js
-import { setRefreshToken } from 'fetch-run/use';
-
-// `token` retrieved from AsyncStorage for example
-setRefreshToken(token);
-```
-
-[Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/refresh-token.js)
-
-### Normalize Response
+### Normalize response
 
 - Normalizes responses with [normalizr](https://github.com/paularmstrong/normalizr)
 
 ```js
+import normalizr from 'fetch-run/use/normalizr';
+
+api.use(normalizr);
+```
+
+Later in app:
+
+```js
+import Http from 'fetch-run';
 import { schema } from 'normalizr';
-import { createNormalize } from 'fetch-run/use';
 
 const userSchema = new schema.Entity('users');
 const messageSchema = new schema.Entity('messages');
 
-const mapSchema = {
-  _prefix: 'api/v1',
+class Api extends Http {
+  login(data) {
+    return this.post('login', data);
+  }
 
-  get: {
-    '^chats/d+/messages$': [messageSchema],
-    // ...
-  },
+  getMessages(chatId) {
+    return this.get(`chats/${chatId}/messages`, {
+      _: { schema: [messageSchema] },
+    });
+  }
 
-  post: {
-    '^login$': userSchema,
-    // ...
-  },
-};
+  updateUser(userId, data) {
+    return this.put(`users/${userId}`, data, { _: { schema: userSchema } });
+  }
 
-api.use(createNormalize(mapSchema));
+  // ...
+}
 ```
 
-[Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/normalize.js)
+[Source code](https://github.com/eightyfive/fetch-run/blob/master/use/normalizr.js)
 
 ## Polyfills
 
 `fetch-run` requires the following polyfills when applicable:
 
 - [fetch](https://github.com/github/fetch)
-- [URL](https://github.com/lifaon74/url-polyfill)
 
 ```
-$ yarn add whatwg-fetch url-polyfill
+$ yarn add whatwg-fetch
 
 // <your-app>/src/services/api.js
 import "whatwg-fetch";
-import "url-polyfill";
 // ...
 ```
-
-## `Http` API
-
-TODO

@@ -1,11 +1,11 @@
 import { isJson } from '../utils';
 
-export default function jsonResponse(next) {
+export default function jsonMiddleware(next) {
   return async req => {
     const res = await next(req);
 
     if (isJson(res)) {
-      return await res.json();
+      return res.json();
     }
 
     return res;

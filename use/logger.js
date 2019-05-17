@@ -1,6 +1,6 @@
 import { isJson } from '../utils';
 
-export default function logger(next) {
+export default function loggerMiddleware(next) {
   return async req => {
     const res = await next(req);
 
