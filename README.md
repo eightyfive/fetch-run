@@ -15,35 +15,54 @@ $ yarn add fetch-run
 
 ```js
 // <your-app>/src/services/api.js
+import Http from 'fetch-run';
+import { normalize } from 'normalizr';
 
-import Http from "fetch-run";
-
-class Api extends Http {
+export default class Api extends Http {
   login(data) {
-    return this.post("login", data);
+    return this.post('login', data);
   }
 
   getMessages(chatId) {
-    return this.get(`chats/${chatId}/messages`);
+    return this.get(`chats/${chatId}/messages`).then(json =>
+      normalize(json, [this.schemas.message])
+    );
   }
 
   updateUser(userId, data) {
-    return this.put(`users/${userId}`, data);
+    return this.put(`users/${userId}`, data).then(json =>
+      normalize(json, this.schemas.user)
+    );
   }
 
   // ...
 }
+```
 
-let baseUri = "https://example.org/api/v1";
+Later in app:
+
+```js
+import { schema } from 'normalizr';
+import jsonResponse from 'fetch-run/use/json';
+
+import Api from '<your-app>/src/services/api.js';
+
+let baseUri;
 
 if (__DEV__) {
   baseUri = "http://localhost/api/v1";
+} else {
+  baseUri = "https://example.org/api/v1";
 }
 
 const api = new Api(baseUri);
 
-api.use(/* middleware 1 */);
-api.use(/* middleware 2 */);
+api.schemas = {
+  user: new schema.Entity('users'),
+  message: new schema.Entity('messages'),
+};
+
+api.use(jsonResponse);
 api.use(...);
 // ...
 
@@ -174,29 +193,11 @@ Performs a `DELETE` request.
 
 All `options` are passed down to the [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) object.
 
-#### `options._` (Meta)
-
-There is a special option `_` meant to hold "meta information". You can use it to [pass down information to middlewares](https://github.com/eightyfive/fetch-run#normalize-response).
-
-It is later attached to the `Request` object as `_meta`:
-
-```js
-export default function normalizrMiddleware(next) {
-  return async req => {
-    const json = await next(req);
-
-    const { schema } = req._meta;
-
-    return schema ? normalize(json, schema) : json;
-  };
-}
-```
-
 ## Included middlewares
 
 ### Json response
 
-- Converts response to JSON
+- Convert response to JSON
 
 ```js
 import jsonResponse from 'fetch-run/use/json';
@@ -208,11 +209,11 @@ api.use(jsonResponse);
 
 ### HTTP Error
 
-- Catches HTTP responses with error status code (`< 200 || >= 300`)
-- Creates a custom [`HttpError`](https://github.com/eightyfive/fetch-run/blob/master/http-error.js)
-- Attaches `err.response = res`
-- Attaches `err.data = res.json()`
-- Throws `HttpError`
+- Catch HTTP responses with error status code (`< 200 || >= 300`)
+- Create a custom [`HttpError`](https://github.com/eightyfive/fetch-run/blob/master/http-error.js)
+- Set `err.response = res`
+- Set `err.data = res.json()`
+- Throw `HttpError`
 
 ```js
 import error from 'fetch-run/use/error';
@@ -239,45 +240,21 @@ try {
 
 [Source code](https://github.com/eightyfive/fetch-run/blob/master/use/error.js)
 
-### Normalize response
+### Log requests (DEV)
 
-- Normalizes responses with [normalizr](https://github.com/paularmstrong/normalizr)
-
-```js
-import normalizr from 'fetch-run/use/normalizr';
-
-api.use(normalizr);
-```
-
-Later in app:
+- Log `Request`
+- Log `Response`
+- Log `>= 500` error (trace, message...)
 
 ```js
-import Http from 'fetch-run';
-import { schema } from 'normalizr';
+import logger from 'fetch-run/use/logger';
 
-const userSchema = new schema.Entity('users');
-const messageSchema = new schema.Entity('messages');
-
-class Api extends Http {
-  login(data) {
-    return this.post('login', data);
-  }
-
-  getMessages(chatId) {
-    return this.get(`chats/${chatId}/messages`, {
-      _: { schema: [messageSchema] },
-    });
-  }
-
-  updateUser(userId, data) {
-    return this.put(`users/${userId}`, data, { _: { schema: userSchema } });
-  }
-
-  // ...
+if (__DEV__) {
+  api.use(logger);
 }
 ```
 
-[Source code](https://github.com/eightyfive/fetch-run/blob/master/use/normalizr.js)
+[Source code](https://github.com/eightyfive/fetch-run/blob/master/use/logger.js)
 
 ## Polyfill
 

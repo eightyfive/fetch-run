@@ -50,9 +50,6 @@ export default class Http {
   request(method, pathname, data, options = {}) {
     const isGet = method === 'GET';
     const url = this.getUrl(pathname, isGet ? data : undefined);
-    const meta = options._ || {};
-
-    delete options._;
 
     const headers = Object.assign({}, this.headers, options.headers);
 
@@ -67,8 +64,6 @@ export default class Http {
 
     // https://developer.mozilla.org/en-US/docs/Web/API/Request
     const req = new Request(url, options);
-
-    req._meta = meta;
 
     return this.run(req);
   }
