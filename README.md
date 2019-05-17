@@ -1,10 +1,9 @@
 # `fetch-run`
 
-`fetch-run` is a small utility `class` that helps you deal with your API endpoints:
+`fetch-run` is a small utility `class` that helps you deal with your API endpoints.
 
-- Explicitly & easily define all you API endpoints
 - Run your API calls through a middleware stack
-- Common use cases / middlewares included (access token, refresh token, normalize response, error management...)
+- Common use cases / middlewares included (convert to json, normalize response, throw error...)
 
 ## Install
 
@@ -65,7 +64,7 @@ A good way to visualize the middleware pattern is to think of the Request/Respon
 
 ### Everything is a middleware
 
-For example `fetch-run` does not assume that you want to convert all your API responses to `json`. In order to do so, you have to _explicitly_ include the appropriate middleware:
+For example `fetch-run` does not assume that you want to convert your API responses to `json`. In order to do so, you have to _explicitly_ include the appropriate middleware:
 
 ```js
 import jsonResponse from 'fetch-run/use/json';
@@ -145,31 +144,31 @@ _Note_: `B` is the most outer layer of the [onion](https://www.google.com/search
 
 ## `Http` API
 
-### `use(middleware)`
+`use(middleware)`
 
 Adds a middleware to the stack. See [Middlewares](https://github.com/eightyfive/fetch-run#middlewares) and [Execution order (LIFO)](https://github.com/eightyfive/fetch-run#execution-order-lifo) for more information.
 
-### `get(pathname, options = {})`
+`get(pathname, options = {})`
 
-Performs a `GET` request. If you need to pass query parameters in the URL, use [`search`](https://github.com/eightyfive/fetch-run#search) instead.
+Performs a `GET` request. If you need to pass query parameters in the URL, use `search` instead.
 
-### `search(pathname, data, options = {})`
+`search(pathname, data, options = {})`
 
 Performs a `GET` request with additional query parameters passed in URL.
 
-### `post(pathname, data = {}, options = {})`
+`post(pathname, data = {}, options = {})`
 
 Performs a `POST` request.
 
-### `put(pathname, data = {}, options = {})`
+`put(pathname, data = {}, options = {})`
 
 Performs a `PUT` request.
 
-### `patch(pathname, data = {}, options = {})`
+`patch(pathname, data = {}, options = {})`
 
 Performs a `PATCH` request.
 
-### `delete(pathname, options = {})`
+`delete(pathname, options = {})`
 
 Performs a `DELETE` request.
 
@@ -177,7 +176,7 @@ Performs a `DELETE` request.
 
 All `options` are passed down the [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) object.
 
-#### `options._` (Meta)
+_`options._` (Meta)\_
 
 There is a special option `_` meant to hold "meta information". You can use it to [pass down information to middlewares](https://github.com/eightyfive/fetch-run#normalize-response).
 
@@ -219,15 +218,27 @@ api.use(jsonResponse);
 - Throws `HttpError`
 
 ```js
-import httpError from 'fetch-run/use/error';
+import error from 'fetch-run/use/error';
 
-api.use(httpError);
+api.use(error);
 ```
 
-Later in app, when you catch the `HttpError`:
+Later in app:
 
-- `err.data` will contain the JSON server response
-- `err.response` the response.
+```js
+import HttpError from 'fetch-run/http-error';
+
+try {
+  api.updateUser(123, { name: 'Tyron' });
+} catch (err) {
+  if (err instanceof HttpError) {
+    // err.response
+    // err.data (JSON data of error response)
+  } else {
+    throw err;
+  }
+}
+```
 
 [Source code](https://github.com/eightyfive/fetch-run/blob/master/use/error.js)
 
@@ -271,13 +282,11 @@ class Api extends Http {
 
 [Source code](https://github.com/eightyfive/fetch-run/blob/master/use/normalizr.js)
 
-## Polyfills
+## Polyfill
 
-`fetch-run` requires the following polyfills when applicable:
+`fetch-run` requires the [fetch](https://github.com/github/fetch) polyfill when applicable.
 
-- [fetch](https://github.com/github/fetch)
-
-```
+```js
 $ yarn add whatwg-fetch
 
 // <your-app>/src/services/api.js
