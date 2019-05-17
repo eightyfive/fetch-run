@@ -210,8 +210,8 @@ api.use(jsonResponse);
 
 - Catches HTTP responses with error status code (`< 200 || >= 300`)
 - Creates a custom [`HttpError`](https://github.com/eightyfive/fetch-run/blob/master/http-error.js)
-- Attaches server response to `HttpError`
-  -Attaches JSON data to `HttpError`
+- Attaches `err.response = res`
+- Attaches `err.data = res.json()`
 - Throws `HttpError`
 
 ```js

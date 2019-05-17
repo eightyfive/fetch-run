@@ -24,7 +24,7 @@ export default class Http {
   }
 
   get(pathname, options) {
-    return this.request('GET', pathname, options);
+    return this.request('GET', pathname, undefined, options);
   }
 
   search(pathname, data, options) {
