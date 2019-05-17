@@ -148,7 +148,7 @@ Adds a middleware to the stack. See [Middlewares](https://github.com/eightyfive/
 
 `get(pathname, options = {})`
 
-Performs a `GET` request. If you need to pass query parameters in the URL, use `search` instead.
+Performs a `GET` request. If you need to pass query parameters to the URL, use `search` instead.
 
 `search(pathname, data, options = {})`
 
@@ -172,9 +172,9 @@ Performs a `DELETE` request.
 
 ### `options`
 
-All `options` are passed down the [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) object.
+All `options` are passed down to the [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) object.
 
-_`options.\_` (Meta)_
+#### `options._` (Meta)
 
 There is a special option `_` meant to hold "meta information". You can use it to [pass down information to middlewares](https://github.com/eightyfive/fetch-run#normalize-response).
 
@@ -194,8 +194,6 @@ export default function normalizrMiddleware(next) {
 
 ## Included middlewares
 
-These are simple middlewares that may not fullfilled all your needs and that's why you are welcome to write your owns. They almost serve more as examples / [learning material](https://github.com/eightyfive/fetch-run/tree/master/use).
-
 ### Json response
 
 - Converts response to JSON
@@ -211,8 +209,9 @@ api.use(jsonResponse);
 ### HTTP Error
 
 - Catches HTTP responses with error status code (`< 200 || >= 300`)
-- Creates a custom `HttpError` (extends [`Error`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error))
+- Creates a custom [`HttpError`](https://github.com/eightyfive/fetch-run/blob/master/http-error.js)
 - Attaches server response to `HttpError`
+  -Attaches JSON data to `HttpError`
 - Throws `HttpError`
 
 ```js
