@@ -77,15 +77,13 @@ api.use(jsonResponse);
 
 Since everything is a middleware, the [order of execution](https://github.com/eightyfive/fetch-run#execution-order-lifo) is important.
 
-### `Request`/`Response`
+### Before/After
 
 `fetch-run` uses [fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) Web APIs standards:
 
 - [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request)
 - [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
 - [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers)
-
-### Before/After
 
 Let's write a simple middleware that remembers an "Access Token" and sets it automatically on the Request once available.
 
@@ -176,7 +174,7 @@ Performs a `DELETE` request.
 
 All `options` are passed down the [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) object.
 
-_`options._` (Meta)\_
+_`options.\_` (Meta)_
 
 There is a special option `_` meant to hold "meta information". You can use it to [pass down information to middlewares](https://github.com/eightyfive/fetch-run#normalize-response).
 
