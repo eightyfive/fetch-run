@@ -49,16 +49,19 @@ export default class Http {
 
   request(method, pathname, data, options = {}) {
     const isGet = method === 'GET';
-    const url = this.getUrl(pathname, isGet ? data : undefined);
 
-    const headers = Object.assign({}, this.headers, options.headers);
+    let url = `${this.baseUrl}/${pathname}`;
+
+    if (isGet && data) {
+      url += `?${this.getQuery(data)}`;
+    }
 
     Object.assign(options, {
       method,
-      headers: new Headers(headers),
+      headers: this.getHeaders(options),
     });
 
-    if (data && !isGet) {
+    if (!isGet && data) {
       options.body = data instanceof FormData ? data : JSON.stringify(data);
     }
 
@@ -76,18 +79,22 @@ export default class Http {
     return this.runFetch(req);
   }
 
-  getUrl(pathname, data) {
-    let url = `${this.baseUrl}/${pathname}`;
+  getHeaders(options) {
+    const headers = Object.assign({}, this.headers, options.headers);
 
-    if (data) {
-      const query = Object.keys(data)
-        .map(key => `${key}=${data[key]}`)
-        .join('&');
+    Object.keys(headers).forEach(name => {
+      if (headers[name] === false) {
+        delete headers[name];
+      }
+    });
 
-      url = `${url}?${query}`;
-    }
+    return new Headers(headers);
+  }
 
-    return url;
+  getQuery(data) {
+    return Object.keys(data)
+      .map(key => `${key}=${data[key]}`)
+      .join('&');
   }
 }
 
