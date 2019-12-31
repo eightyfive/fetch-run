@@ -13,13 +13,8 @@ $ yarn add fetch-run
 ```js
 import Http from 'fetch-run';
 import jsonResponse from 'fetch-run/use/json';
-import { normalize, schema } from 'normalizr';
 
 const api = new Http('https://example.org/api/v1');
-
-api.schemas = {
-  user: new schema.Entity('users'),
-};
 
 api.use(jsonResponse);
 api.use(...);
@@ -27,8 +22,8 @@ api.use(...);
 // Later in app
 
 api.post('login', data);
-api.get(`users/${id}`).then(json => normalize(json, this.schemas.user));
-api.search('users', { name: 'John' }).then(json => normalize(json, [this.schemas.user]));
+api.get(`users/${id}`).then(user => ...);
+api.search('users', { name: 'John' }).then(users => ...);
 ```
 
 ## Middlewares
