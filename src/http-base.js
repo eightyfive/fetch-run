@@ -1,16 +1,24 @@
+import qs from './qs';
+
+const isHttpUri = /^https?:\/\//;
+
 export default /* abstract */ class HttpBase {
   middlewares = [];
   runFetch = null;
 
   /* abstract function getKernel(); */
 
-  constructor(baseUrl, headers = {}) {
-    this.baseUrl = baseUrl;
-    this.headers = headers;
+  constructor(baseUri, options = {}) {
+    this.baseUri = baseUri;
+    this.options = options;
+
+    if (!this.options.headers) {
+      this.options.headers = {};
+    }
   }
 
   setHeader(name, value) {
-    this.headers[name] = value;
+    this.options.headers[name] = value;
   }
 
   setBearer(token) {
@@ -21,50 +29,51 @@ export default /* abstract */ class HttpBase {
     this.middlewares.unshift(middleware);
   }
 
-  get(pathname, options) {
-    return this.request('GET', pathname, undefined, options);
+  get(path, options) {
+    return this.request('GET', path, undefined, options);
   }
 
-  search(pathname, data, options) {
-    return this.request('GET', pathname, data, options);
+  search(path, query, options) {
+    return this.request('GET', `${path}?${qs(query)}`, undefined, options);
   }
 
-  post(pathname, data, options) {
-    return this.request('POST', pathname, data, options);
+  post(path, data, options) {
+    return this.request('POST', path, data, options);
   }
 
-  put(pathname, data, options) {
-    return this.request('PUT', pathname, data, options);
+  put(path, data, options) {
+    return this.request('PUT', path, data, options);
   }
 
-  patch(pathname, data, options) {
-    return this.request('PATCH', pathname, data, options);
+  patch(path, data, options) {
+    return this.request('PATCH', path, data, options);
   }
 
-  delete(pathname, options) {
-    return this.request('DELETE', pathname, undefined, options);
+  delete(path, options) {
+    return this.request('DELETE', path, undefined, options);
   }
 
-  request(method, pathname, data, options = {}) {
-    const isGet = method === 'GET';
-
-    let url = `${this.baseUrl}/${pathname}`;
-
-    if (isGet && data) {
-      url += `?${this.getQuery(data)}`;
-    }
-
-    Object.assign(options, {
+  request(method, path, data, options = {}) {
+    const init = {
+      ...options,
       method,
-      headers: this.getHeaders(options),
-    });
+      headers: this.createHeaders(options),
+    };
 
-    if (!isGet && data) {
+    if (data && method !== 'GET') {
       options.body = data instanceof FormData ? data : JSON.stringify(data);
     }
 
+    let url;
+
+    if (!this.baseUri || isHttpUri.test(path)) {
+      url = path;
+    } else {
+      url = `${this.baseUri}/${path}`;
+    }
+
     // https://developer.mozilla.org/en-US/docs/Web/API/Request
-    const req = new Request(url, options);
+    const req = new Request(url, init);
 
     return this.run(req);
   }
@@ -77,22 +86,19 @@ export default /* abstract */ class HttpBase {
     return this.runFetch(req);
   }
 
-  getHeaders(options) {
-    const headers = Object.assign({}, this.headers, options.headers);
-
-    Object.keys(headers).forEach(name => {
-      if (headers[name] === false) {
-        delete headers[name];
-      }
+  createHeaders(options) {
+    const headers = new Headers({
+      ...this.options.headers,
+      ...options.headers,
     });
 
-    return new Headers(headers);
-  }
+    for (let [key, val] of headers.entries()) {
+      if (val === false) {
+        headers.delete(key);
+      }
+    }
 
-  getQuery(data) {
-    return Object.keys(data)
-      .map(key => `${key}=${data[key]}`)
-      .join('&');
+    return headers;
   }
 }
 
