@@ -1,13 +1,11 @@
-import { isJson } from '../utils';
+const json = next => async req => {
+  const res = await next(req);
 
-export default function jsonMiddleware(next) {
-  return async req => {
-    const res = await next(req);
+  if (res.headers.get('Content-Type') === 'application/json') {
+    return res.json();
+  }
 
-    if (isJson(res)) {
-      return res.json();
-    }
+  return res;
+};
 
-    return res;
-  };
-}
+export default json;

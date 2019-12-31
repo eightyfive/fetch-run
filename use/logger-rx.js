@@ -10,8 +10,8 @@ const logRes = tap(res => {
   console.log(res);
   console.groupEnd();
 
-  if (res.status >= 500) {
-    console.group(`Internal Server Error (${res.status})`);
+  if (res.status >= 300) {
+    console.group(`Server Error (${res.status})`);
 
     const data = res.response;
 
