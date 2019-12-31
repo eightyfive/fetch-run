@@ -1,9 +1,6 @@
 # `fetch-run`
 
-`fetch-run` is a small utility `class` that helps you deal with your API endpoints.
-
-- Run your API calls through a middleware stack
-- Common use cases / middlewares included (convert to json, normalize response, throw error...)
+`fetch-run` runs a middleware stack before and after `fetch` call.
 
 ## Install
 
@@ -14,59 +11,24 @@ $ yarn add fetch-run
 ## Usage
 
 ```js
-// <your-app>/src/services/api.js
 import Http from 'fetch-run';
-import { normalize } from 'normalizr';
-
-export default class Api extends Http {
-  login(data) {
-    return this.post('login', data);
-  }
-
-  getMessages(chatId) {
-    return this.get(`chats/${chatId}/messages`).then(json =>
-      normalize(json, [this.schemas.message])
-    );
-  }
-
-  updateUser(userId, data) {
-    return this.put(`users/${userId}`, data).then(json =>
-      normalize(json, this.schemas.user)
-    );
-  }
-
-  // ...
-}
-```
-
-Later in app:
-
-```js
-import { schema } from 'normalizr';
 import jsonResponse from 'fetch-run/use/json';
+import { normalize, schema } from 'normalizr';
 
-import Api from '<your-app>/src/services/api.js';
-
-let baseUri;
-
-if (__DEV__) {
-  baseUri = "http://localhost/api/v1";
-} else {
-  baseUri = "https://example.org/api/v1";
-}
-
-const api = new Api(baseUri);
+const api = new Http('https://example.org/api/v1');
 
 api.schemas = {
   user: new schema.Entity('users'),
-  message: new schema.Entity('messages'),
 };
 
 api.use(jsonResponse);
 api.use(...);
-// ...
 
-export default api;
+// Later in app
+
+api.post('login', data);
+api.get(`users/${id}`).then(json => normalize(json, this.schemas.user));
+api.search('users', { name: 'John' }).then(json => normalize(json, [this.schemas.user]));
 ```
 
 ## Middlewares
@@ -89,7 +51,7 @@ For example `fetch-run` does not assume that you want to convert your API respon
 import jsonResponse from 'fetch-run/use/json';
 // ...
 
-const api = new Api(baseUri);
+const api = new Http();
 
 api.use(jsonResponse);
 ```
@@ -142,7 +104,7 @@ Middlewares are executed in [LIFO order](https://en.wikipedia.org/wiki/FIFO_and_
 
 Everytime you push a new middleware to the stack, it is added as a new [onion layer](https://www.google.com/search?q=middleware+onion&tbm=isch) on top of all existing ones.
 
-#### Simple example
+#### Example
 
 ```js
 api.use(A);
@@ -165,27 +127,27 @@ _Note_: `B` is the most outer layer of the [onion](https://www.google.com/search
 
 Adds a middleware to the stack. See [Middlewares](https://github.com/eightyfive/fetch-run#middlewares) and [Execution order (LIFO)](https://github.com/eightyfive/fetch-run#execution-order-lifo) for more information.
 
-`get(pathname, options = {})`
+`get(path, options)`
 
 Performs a `GET` request. If you need to pass query parameters to the URL, use `search` instead.
 
-`search(pathname, data, options = {})`
+`search(path, params, options)`
 
 Performs a `GET` request with additional query parameters passed in URL.
 
-`post(pathname, data = {}, options = {})`
+`post(path, data, options)`
 
 Performs a `POST` request.
 
-`put(pathname, data = {}, options = {})`
+`put(path, data, options)`
 
 Performs a `PUT` request.
 
-`patch(pathname, data = {}, options = {})`
+`patch(path, data, options)`
 
 Performs a `PATCH` request.
 
-`delete(pathname, options = {})`
+`delete(path, options)`
 
 Performs a `DELETE` request.
 
@@ -193,7 +155,7 @@ Performs a `DELETE` request.
 
 All `options` are passed down to the [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) object.
 
-## Included middlewares
+## Included middleware
 
 ### Json response
 
@@ -209,10 +171,11 @@ api.use(jsonResponse);
 
 ### HTTP Error
 
-- Catch HTTP responses with error status code (`< 200 || >= 300`)
+- Catch HTTP responses with error status code (`< 200 || >= 300` – aka [`response.ok`](https://developer.mozilla.org/en-US/docs/Web/API/Response/ok))
 - Create a custom [`HttpError`](https://github.com/eightyfive/fetch-run/blob/master/http-error.js)
-- Set `err.response = res`
-- Set `err.data = res.json()`
+- Set `err.code = res.status`
+- Set `err.message = res.statusText`
+- Set `err.response = res.clone()`
 - Throw `HttpError`
 
 ```js
@@ -229,9 +192,9 @@ import HttpError from 'fetch-run/http-error';
 try {
   api.updateUser(123, { name: 'Tyron' });
 } catch (err) {
+  // or if (err.name === 'HttpError')
   if (err instanceof HttpError) {
-    // err.response
-    // err.data (JSON data of error response)
+    // err.response.json() ??
   } else {
     throw err;
   }
@@ -244,7 +207,7 @@ try {
 
 - Log `Request`
 - Log `Response`
-- Log `>= 500` error (trace, message...)
+- Log `>= 300` error (trace, message...)
 
 ```js
 import logger from 'fetch-run/use/logger';
