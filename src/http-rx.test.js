@@ -1,7 +1,7 @@
 import { from } from 'rxjs';
 import { switchMap, tap } from 'rxjs/operators';
 
-import Http$ from './http-rx';
+import Http from './http-rx';
 
 let api;
 
@@ -9,7 +9,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   fetch.resetMocks();
 
-  api = new Http$('http://example.org', {
+  api = new Http('http://example.org', {
     headers: {
       'Content-Type': 'application/json',
     },
