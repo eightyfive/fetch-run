@@ -4,7 +4,7 @@ import qs from './qs';
 
 const isHttpUri = /^https?:\/\//;
 
-export default /* abstract */ class HttpBase {
+export default /* abstract */ class HttpStack {
   constructor(baseUri, options = {}) {
     this.baseUri = baseUri;
     this.options = options;

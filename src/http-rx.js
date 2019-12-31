@@ -2,9 +2,9 @@ import { of } from 'rxjs';
 import { fromFetch } from 'rxjs/fetch';
 import { switchMap } from 'rxjs/operators';
 
-import HttpBase from './http-base';
+import HttpStack from './http-stack';
 
-export default class HttpRx extends HttpBase {
+export default class HttpRx extends HttpStack {
   getKernel() {
     return req$ => req$.pipe(switchMap(req => fromFetch(req)));
   }

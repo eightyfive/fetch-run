@@ -1,6 +1,6 @@
-import HttpBase from './http-base';
+import HttpStack from './http-stack';
 
-export default class Http extends HttpBase {
+export default class Http extends HttpStack {
   getKernel() {
     return req => fetch(req);
   }
