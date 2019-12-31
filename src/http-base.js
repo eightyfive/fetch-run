@@ -1,21 +1,25 @@
+import flow from 'lodash.flow';
+
 import qs from './qs';
 
 const isHttpUri = /^https?:\/\//;
 
 export default /* abstract */ class HttpBase {
-  middlewares = [];
-  runFetch = null;
-
-  /* abstract function getKernel(); */
-
   constructor(baseUri, options = {}) {
     this.baseUri = baseUri;
     this.options = options;
+
+    this.middlewares = [];
+    this.stack = null;
 
     if (!this.options.headers) {
       this.options.headers = {};
     }
   }
+
+  /* abstract function getKernel(); */
+
+  /* abstract function run(req); */
 
   setHeader(name, value) {
     this.options.headers[name] = value;
@@ -26,15 +30,11 @@ export default /* abstract */ class HttpBase {
   }
 
   use(middleware) {
-    this.middlewares.unshift(middleware);
+    this.middlewares.push(middleware);
   }
 
   get(path, options) {
     return this.request('GET', path, undefined, options);
-  }
-
-  search(path, query, options) {
-    return this.request('GET', `${path}?${qs(query)}`, undefined, options);
   }
 
   post(path, data, options) {
@@ -51,6 +51,10 @@ export default /* abstract */ class HttpBase {
 
   delete(path, options) {
     return this.request('DELETE', path, undefined, options);
+  }
+
+  search(path, query, options) {
+    return this.request('GET', `${path}?${qs(query)}`, undefined, options);
   }
 
   request(method, path, data, options = {}) {
@@ -78,12 +82,16 @@ export default /* abstract */ class HttpBase {
     return this.run(req);
   }
 
-  run(req) {
-    if (!this.runFetch) {
-      this.runFetch = compose(...this.middlewares)(this.getKernel());
+  getStack() {
+    if (!this.stack) {
+      this.stack = flow([this.getKernel(), ...this.middlewares]);
     }
 
-    return this.runFetch(req);
+    return {
+      run(req) {
+        return this.stack(req);
+      },
+    };
   }
 
   createHeaders(options) {
@@ -100,17 +108,4 @@ export default /* abstract */ class HttpBase {
 
     return headers;
   }
-}
-
-// Credits: https://github.com/reduxjs/redux/src/compose.js
-function compose(...funcs) {
-  if (funcs.length === 0) {
-    return arg => arg;
-  }
-
-  if (funcs.length === 1) {
-    return funcs[0];
-  }
-
-  return funcs.reduce((a, b) => (...args) => a(b(...args)));
 }
