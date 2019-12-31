@@ -84,7 +84,7 @@ export default /* abstract */ class HttpBase {
 
   getStack() {
     if (!this.stack) {
-      this.stack = flow([this.getKernel(), ...this.middlewares]);
+      this.stack = flow(this.middlewares)(this.getKernel());
     }
 
     return {

@@ -1,8 +1,8 @@
 import HttpBase from './http-base';
 
 export default class Http extends HttpBase {
-  getKernel(req) {
-    return next => req => fetch(req);
+  getKernel() {
+    return req => fetch(req);
   }
 
   run(req) {
