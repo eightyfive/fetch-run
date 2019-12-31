@@ -3,19 +3,33 @@
   "version": "0.4.4",
   "description": "Fetch middleware",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "format": "prettier --write 'src/**/*.js'"
+    "test": "jest",
+    "lint": "eslint .",
+    "format": "prettier --write '**/*.{js,json,css,yml}'"
   },
   "keywords": [
-    "fetch"
+    "fetch",
+    "middleware",
+    "rxjs"
   ],
   "author": "Benoit Sagols",
   "license": "ISC",
   "devDependencies": {
-    "prettier": "^1.17.0"
+    "@babel/core": "^7.7.7",
+    "@babel/preset-env": "^7.7.7",
+    "babel-jest": "^24.9.0",
+    "eslint": "6.1.0",
+    "eslint-config-airbnb": "18.0.1",
+    "eslint-config-prettier": "^6.9.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-jsx-a11y": "^6.2.3",
+    "eslint-plugin-react": "^7.14.3",
+    "eslint-plugin-react-hooks": "^1.7.0",
+    "jest": "^24.9.0",
+    "prettier": "1.19.1",
+    "rxjs": "^6.5.4"
   },
   "dependencies": {
-    "lodash.flow": "^3.5.0",
-    "npm": "^6.4.1"
+    "lodash.flow": "^3.5.0"
   }
 }

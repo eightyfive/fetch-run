@@ -88,9 +88,7 @@ export default /* abstract */ class HttpBase {
     }
 
     return {
-      run(req) {
-        return this.stack(req);
-      },
+      run: req => this.stack(req),
     };
   }
 
@@ -100,7 +98,7 @@ export default /* abstract */ class HttpBase {
       ...options.headers,
     });
 
-    for (let [key, val] of headers.entries()) {
+    for (const [key, val] of headers.entries()) {
       if (val === false) {
         headers.delete(key);
       }

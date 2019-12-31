@@ -1,6 +1,6 @@
 import { of } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
 import { fromFetch } from 'rxjs/fetch';
+import { switchMap } from 'rxjs/operators';
 
 import HttpBase from './http-base';
 
