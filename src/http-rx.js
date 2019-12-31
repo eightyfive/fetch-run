@@ -5,8 +5,8 @@ import { switchMap } from 'rxjs/operators';
 import HttpBase from './http-base';
 
 export default class HttpRx extends HttpBase {
-  getKernel(req$) {
-    return next => req$ => req$.pipe(switchMap(req => fromFetch(req)));
+  getKernel() {
+    return req$ => req$.pipe(switchMap(req => fromFetch(req)));
   }
 
   run(req) {
