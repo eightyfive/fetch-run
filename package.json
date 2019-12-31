@@ -28,7 +28,8 @@
     "jest": "^24.9.0",
     "jest-fetch-mock": "^3.0.1",
     "prettier": "1.19.1",
-    "rxjs": "^6.5.4"
+    "rxjs": "^6.5.4",
+    "standard-error": "^1.1.0"
   },
   "dependencies": {
     "lodash.flow": "^3.5.0"
