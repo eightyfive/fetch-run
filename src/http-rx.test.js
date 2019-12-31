@@ -29,33 +29,6 @@ describe('HttpRx', () => {
     });
   });
 
-  it('adds headers', done => {
-    api
-      .get('api/resource', {
-        headers: { Accept: 'application/json', 'X-Version': '0.0.1' },
-      })
-      .subscribe(() => {
-        const req = fetch.mock.calls[0][0];
-
-        expect(req.headers.get('Content-Type')).toBe('application/json'); // untouched
-        expect(req.headers.get('Accept')).toBe('application/json');
-        expect(req.headers.get('X-Version')).toBe('0.0.1');
-
-        done();
-      });
-  });
-
-  it('replaces headers', done => {
-    api
-      .get('api/resource', { headers: { 'Content-Type': 'text/plain' } })
-      .subscribe(() => {
-        const req = fetch.mock.calls[0][0];
-
-        expect(req.headers.get('Content-Type')).toBe('text/plain');
-        done();
-      });
-  });
-
   it('logs req & res', done => {
     const log = jest.fn();
 
