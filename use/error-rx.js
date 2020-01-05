@@ -1,4 +1,4 @@
-import { filter, tap } from 'rxjs/operators';
+import { tap } from 'rxjs/operators';
 import HttpError from '../http-error';
 
 const error = next => req$ => {
@@ -9,14 +9,15 @@ const error = next => req$ => {
   });
 
   return next(req$).pipe(
-    filter(res => !res.ok),
     tap(res => {
-      throw new HttpError(
-        res.status,
-        res.statusText,
-        _req.clone(),
-        res.clone(),
-      );
+      if (!res.ok) {
+        throw new HttpError(
+          res.status,
+          res.statusText,
+          _req.clone(),
+          res.clone(),
+        );
+      }
     }),
   );
 };
