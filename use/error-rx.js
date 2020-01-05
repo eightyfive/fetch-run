@@ -10,8 +10,13 @@ const error = next => req$ => {
 
   return next(req$).pipe(
     filter(res => !res.ok),
-    tap(({ status, statusText }) => {
-      throw new HttpError(status, statusText, _req.clone(), res.clone());
+    tap(res => {
+      throw new HttpError(
+        res.status,
+        res.statusText,
+        _req.clone(),
+        res.clone(),
+      );
     }),
   );
 };

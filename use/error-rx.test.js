@@ -24,6 +24,7 @@ describe('error', () => {
       .subscribe(
         () => {},
         err => {
+          console.log(err);
           err.response.json().then(data => {
             expect(err.name).toBe('HttpError');
             expect(err.code).toBe(422);
