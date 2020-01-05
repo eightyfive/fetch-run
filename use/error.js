@@ -7,7 +7,7 @@ const error = next => async req => {
     return res;
   }
 
-  throw new HttpError(res.status, res.statusText, res.clone());
+  throw new HttpError(res.status, res.statusText, req.clone(), res.clone());
 };
 
 export default error;

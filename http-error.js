@@ -1,8 +1,13 @@
 import StandardError from 'standard-error';
 
-export default function HttpError(code, message, response) {
+export default function HttpError(code, message, request, response) {
   if (typeof code !== 'number') throw new TypeError('Non-numeric HTTP code');
-  StandardError.call(this, message || `HTTP Error ${code}`, { response });
+
+  StandardError.call(this, message || `HTTP Error ${code}`, {
+    request,
+    response,
+  });
+
   this.code = code;
 }
 
