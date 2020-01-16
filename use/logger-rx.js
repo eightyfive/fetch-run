@@ -1,38 +1,44 @@
 /* eslint-disable no-console */
-import { tap } from 'rxjs/operators';
+import { from } from 'rxjs';
+import { tap, filter, switchMap, mapTo } from 'rxjs/operators';
 
-const logReq = tap(req => {
-  console.groupCollapsed(req.url);
-  console.log(req);
-});
+const logger = next => req$ => {
+  let _req;
 
-const logRes = tap(res => {
-  console.log(res);
-  console.groupEnd();
+  req$.subscribe(req => {
+    _req = req;
+  });
 
-  if (res.status >= 300) {
-    console.group(`Server Error (${res.status})`);
+  return next(req$).pipe(
+    switchMap(res =>
+      from(res.clone().json()).pipe(
+        tap(data => {
+          console.groupCollapsed(_req.url);
+          console.log(_req);
+          console.log(res);
+          console.log(data);
+          console.groupEnd();
+        }),
+        filter(data => res.status >= 300),
+        tap(data => {
+          console.group(`Server Error (${res.status})`);
+          console.error(data.message);
 
-    const data = res.response;
+          if (data.exception) {
+            console.log(data.exception);
+          }
 
-    if (data) {
-      console.error(data.message);
+          if (data.file) {
+            console.log(`${data.file} (${data.line})`);
+          }
 
-      if (data.exception) {
-        console.log(data.exception);
-      }
-
-      if (data.file) {
-        console.log(`${data.file} (${data.line})`);
-      }
-
-      console.log(data.trace);
-    }
-
-    console.groupEnd();
-  }
-});
-
-const logger = next => req$ => next(req$.pipe(logReq)).pipe(logRes);
+          console.log(data.trace);
+          console.groupEnd();
+        }),
+        mapTo(res),
+      ),
+    ),
+  );
+};
 
 export default logger;
