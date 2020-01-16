@@ -23,8 +23,7 @@ describe('error', () => {
       .pipe(catchError(err => throwError(err)))
       .subscribe(
         () => {},
-        err => {
-          console.log(err);
+        err =>
           err.response.json().then(data => {
             expect(err.name).toBe('HttpError');
             expect(err.code).toBe(422);
@@ -32,8 +31,7 @@ describe('error', () => {
             expect(data).toEqual({ foo: 'bar' });
 
             done();
-          });
-        },
+          }),
       );
   });
 });

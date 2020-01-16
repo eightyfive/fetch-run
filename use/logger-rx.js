@@ -18,22 +18,22 @@ const logger = next => req$ => {
           console.log(res);
           console.log(data);
           console.groupEnd();
-        }),
-        filter(data => res.status >= 300),
-        tap(data => {
-          console.group(`Server Error (${res.status})`);
-          console.error(data.message);
 
-          if (data.exception) {
-            console.log(data.exception);
+          if (res.status >= 300) {
+            console.group(`Server Error (${res.status})`);
+            console.error(data.message);
+
+            if (data.exception) {
+              console.log(data.exception);
+            }
+
+            if (data.file) {
+              console.log(`${data.file} (${data.line})`);
+            }
+
+            console.log(data.trace);
+            console.groupEnd();
           }
-
-          if (data.file) {
-            console.log(`${data.file} (${data.line})`);
-          }
-
-          console.log(data.trace);
-          console.groupEnd();
         }),
         mapTo(res),
       ),

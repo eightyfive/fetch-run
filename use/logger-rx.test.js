@@ -9,15 +9,25 @@ const spyLog = jest.spyOn(global.console, 'log').mockImplementation();
 let api;
 
 beforeEach(() => {
-  api = new Http();
+  jest.clearAllMocks();
+  fetch.resetMocks();
+
+  api = new Http('http://example.org', {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
   api.use(logger);
 });
 
 describe('logger', () => {
   it('logs req & res', done => {
-    api.get('http://example.org').subscribe(() => {
-      expect(spyGroup).toHaveBeenCalledWith('http://example.org/');
-      expect(spyLog).toHaveBeenCalledTimes(2);
+    fetch.mockResponse('{"foo": "bar"}');
+
+    api.get('api/resource').subscribe(() => {
+      expect(spyGroup).toHaveBeenCalledWith('http://example.org/api/resource');
+      expect(spyLog).toHaveBeenCalledTimes(3);
+
       done();
     });
   });
