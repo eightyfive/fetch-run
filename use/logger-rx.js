@@ -1,6 +1,5 @@
-/* eslint-disable no-console */
 import { from } from 'rxjs';
-import { tap, filter, switchMap, mapTo } from 'rxjs/operators';
+import { tap, switchMap, mapTo } from 'rxjs/operators';
 
 const logger = next => req$ => {
   let _req;
@@ -20,8 +19,7 @@ const logger = next => req$ => {
           console.groupEnd();
 
           if (res.status >= 300) {
-            console.group(`Server Error (${res.status})`);
-            console.error(data.message);
+            console.group(`Server Error (${res.status}): ${data.message}`);
 
             if (data.exception) {
               console.log(data.exception);
@@ -31,7 +29,10 @@ const logger = next => req$ => {
               console.log(`${data.file} (${data.line})`);
             }
 
-            console.log(data.trace);
+            if (data.trace) {
+              console.log(data.trace);
+            }
+
             console.groupEnd();
           }
         }),
