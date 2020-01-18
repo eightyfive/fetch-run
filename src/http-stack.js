@@ -65,7 +65,7 @@ export default /* abstract */ class HttpStack {
     };
 
     if (data && method !== 'GET') {
-      options.body = data instanceof FormData ? data : JSON.stringify(data);
+      init.body = data instanceof FormData ? data : JSON.stringify(data);
     }
 
     let url;
