@@ -1,6 +1,6 @@
 {
   "name": "fetch-run",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "description": "Fetch middleware",
   "scripts": {
     "test": "jest",
