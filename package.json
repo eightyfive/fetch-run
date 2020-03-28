@@ -5,7 +5,8 @@
   "scripts": {
     "test": "jest",
     "lint": "eslint .",
-    "format": "prettier --write '**/*.{js,json,css,yml}'"
+    "format": "prettier --write '**/*.{js,json,css,yml}'",
+    "release": "np --no-2fa --no-release-draft"
   },
   "keywords": [
     "fetch",
