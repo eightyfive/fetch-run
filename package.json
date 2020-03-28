@@ -9,8 +9,7 @@
   },
   "keywords": [
     "fetch",
-    "middleware",
-    "rxjs"
+    "middleware"
   ],
   "author": "Benoit Sagols",
   "license": "ISC",
@@ -31,8 +30,7 @@
     "rxjs": "^6.5.4"
   },
   "dependencies": {
-    "lodash.flow": "^3.5.0",
-    "standard-error": "^1.1.0"
+    "lodash.flow": "^3.5.0"
   },
   "jest": {
     "setupFiles": [

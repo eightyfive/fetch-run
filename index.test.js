@@ -1,7 +1,4 @@
-import { from } from 'rxjs';
-import { switchMap, tap } from 'rxjs/operators';
-
-import Http from './http';
+import Http from './index';
 
 let api;
 

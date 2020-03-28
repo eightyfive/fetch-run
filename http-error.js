@@ -1,21 +1,10 @@
-import StandardError from 'standard-error';
+export default class HttpError extends Error {
+  constructor(code, message, request, response) {
+    super(message);
 
-export default function HttpError(code, message, request, response) {
-  if (typeof code !== 'number') throw new TypeError('Non-numeric HTTP code');
-
-  StandardError.call(this, message || `HTTP Error ${code}`, {
-    request,
-    response,
-  });
-
-  this.code = code;
+    this.code = code;
+    this.name = 'HTTPError';
+    this.request = request;
+    this.response = response;
+  }
 }
-
-HttpError.prototype = Object.create(StandardError.prototype, {
-  constructor: { value: HttpError, configurable: true, writable: true },
-});
-
-Object.assign(HttpError.prototype, {
-  name: 'HttpError',
-  toString: () => `${this.name}: ${this.code} ${this.message}`,
-});
