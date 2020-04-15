@@ -1,11 +1,93 @@
-import HttpStack from './http-stack';
+import qs from './qs';
 
-export default class Http extends HttpStack {
-  getKernel() {
-    return req => fetch(req);
+const reUri = /^https?:\/\//;
+
+const o = {
+  assign: Object.assign,
+};
+
+export default class Http {
+  constructor(baseUri, options = {}) {
+    this.baseUri = baseUri;
+    this.options = o.assign({ headers: {} }, options);
+
+    this.run = this.constructor.getKernel();
   }
 
-  run(req) {
-    return this.getStack().run(req);
+  static getKernel() {
+    return (req) => fetch(req);
+  }
+
+  use(layer) {
+    this.run = layer(this.run);
+  }
+
+  setHeader(name, value) {
+    o.assign(this.options.headers, { [name]: value });
+  }
+
+  setBearer(token) {
+    this.setHeader('Authorization', `Bearer ${token}`);
+  }
+
+  get(path, options) {
+    return this.request('GET', path, undefined, options);
+  }
+
+  post(path, data, options) {
+    return this.request('POST', path, data, options);
+  }
+
+  put(path, data, options) {
+    return this.request('PUT', path, data, options);
+  }
+
+  patch(path, data, options) {
+    return this.request('PATCH', path, data, options);
+  }
+
+  delete(path, options) {
+    return this.request('DELETE', path, undefined, options);
+  }
+
+  search(path, query, options) {
+    return this.request('GET', `${path}?${qs(query)}`, undefined, options);
+  }
+
+  request(method, path, data, options = {}) {
+    const init = {
+      ...options,
+      method,
+      headers: this.createHeaders(options),
+    };
+
+    if (data && method !== 'GET') {
+      init.body = data instanceof FormData ? data : JSON.stringify(data);
+    }
+
+    const url = [this.baseUri, path];
+
+    if (reUri.test(path)) {
+      url.shift();
+    }
+
+    const req = new Request(url.join('/'), init);
+
+    return this.run(req);
+  }
+
+  createHeaders(options) {
+    const headers = new Headers({
+      ...this.options.headers,
+      ...options.headers,
+    });
+
+    for (const [key, val] of headers.entries()) {
+      if (val === false) {
+        headers.delete(key);
+      }
+    }
+
+    return headers;
   }
 }
