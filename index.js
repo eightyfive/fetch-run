@@ -11,11 +11,7 @@ export default class Http {
     this.baseUri = baseUri;
     this.options = o.assign({ headers: {} }, options);
 
-    this.run = this.constructor.getKernel();
-  }
-
-  static getKernel() {
-    return (req) => fetch(req);
+    this.run = (req) => fetch(req);
   }
 
   use(layer) {
