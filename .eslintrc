@@ -1,15 +1,4 @@
 {
-  "extends": ["airbnb", "prettier"],
-
-  "globals": {
-    "jest": "readonly",
-    "beforeEach": "readonly",
-    "describe": "readonly",
-    "it": "readonly",
-    "expect": "readonly",
-    "fetch": "readonly",
-    "FormData": "readonly",
-    "Request": "readonly",
-    "Headers": "readonly"
-  }
+  "parser": "babel-eslint",
+  "extends": ["prettier", "prettier/react"]
 }
