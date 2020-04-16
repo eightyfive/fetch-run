@@ -11,11 +11,15 @@ export default class Http {
     this.baseUri = baseUri;
     this.options = o.assign({ headers: {} }, options);
 
-    this.run = (req) => fetch(req);
+    this.stack = (req) => fetch(req);
   }
 
   use(layer) {
-    this.run = layer(this.run);
+    this.stack = layer(this.stack);
+  }
+
+  run(req) {
+    return this.stack(req);
   }
 
   setHeader(name, value) {
