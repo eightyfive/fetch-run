@@ -77,17 +77,17 @@ export default class Http {
   }
 
   createHeaders(options) {
-    const headers = new Headers({
+    const headers = {
       ...this.options.headers,
       ...options.headers,
-    });
+    };
 
-    for (const [key, val] of headers.entries()) {
+    for (const [key, val] of o.entries(options.headers || {})) {
       if (val === false) {
-        headers.delete(key);
+        delete headers[key];
       }
     }
 
-    return headers;
+    return new Headers(headers);
   }
 }
