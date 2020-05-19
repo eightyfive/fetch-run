@@ -4,6 +4,7 @@ const reUri = /^https?:\/\//;
 
 const o = {
   assign: Object.assign,
+  entries: Object.entries,
 };
 
 export default class Http {
