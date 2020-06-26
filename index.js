@@ -2,10 +2,7 @@ import qs from './qs';
 
 const reUri = /^https?:\/\//;
 
-const o = {
-  assign: Object.assign,
-  entries: Object.entries,
-};
+const o = Object;
 
 export default class Http {
   constructor(baseUri, options = {}) {

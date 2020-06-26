@@ -1,5 +1,17 @@
+const o = Object;
+
 export default function qs(params) {
-  return Object.keys(params)
-    .map(key => `${key}=${params[key]}`)
-    .join('&');
+  let query = [];
+
+  for (const [key, value] of o.entries(params)) {
+    if (value === null) {
+      query.push(`${key}=`);
+    } else if (typeof value === 'object') {
+      query.push(`${key}=${JSON.stringify(value)}`);
+    } else {
+      query.push(`${key}=${value}`);
+    }
+  }
+
+  return query.join('&');
 }
