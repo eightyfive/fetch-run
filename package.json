@@ -27,6 +27,7 @@
     "rxjs": "^6.5.4"
   },
   "dependencies": {
+    "lodash.trimend": "^4.5.1",
     "query-string": "^7.0.0"
   },
   "jest": {

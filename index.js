@@ -1,13 +1,10 @@
 import qs from 'query-string';
-
-const reUri = /^https?:\/\//;
-
-const o = Object;
+import _trimEnd from 'lodash.trimend';
 
 export default class Http {
-  constructor(baseUri, options = {}) {
-    this.baseUri = baseUri;
-    this.options = o.assign({ headers: {} }, options);
+  constructor(baseURI, options = {}) {
+    this.baseURI = _trimEnd(baseURI, '/');
+    this.options = Object.assign({ headers: {} }, options);
 
     this.stack = (req) => fetch(req);
   }
@@ -21,7 +18,7 @@ export default class Http {
   }
 
   setHeader(name, value) {
-    o.assign(this.options.headers, { [name]: value });
+    Object.assign(this.options.headers, { [name]: value });
   }
 
   setBearer(token) {
@@ -58,39 +55,26 @@ export default class Http {
   }
 
   request(method, path, data, options = {}) {
-    const init = {
-      ...options,
+    // Headers
+    const headers = Object.assign({}, this.options.headers, options.headers);
+
+    if (data instanceof FormData) {
+      delete headers['Content-Type'];
+    }
+
+    // Init
+    const init = Object.assign({}, options, {
       method,
-      headers: this.createHeaders(options),
-    };
+      headers: new Headers(headers),
+    });
 
     if (data && method !== 'GET') {
       init.body = data instanceof FormData ? data : JSON.stringify(data);
     }
 
-    const url = [this.baseUri, path];
-
-    if (reUri.test(path)) {
-      url.shift();
-    }
-
-    const req = new Request(url.join('/'), init);
+    // Request
+    const req = new Request(`${this.baseURI}/${path}`, init);
 
     return this.run(req);
-  }
-
-  createHeaders(options) {
-    const headers = {
-      ...this.options.headers,
-      ...options.headers,
-    };
-
-    for (const [key, val] of o.entries(options.headers || {})) {
-      if (val === false) {
-        delete headers[key];
-      }
-    }
-
-    return new Headers(headers);
   }
 }
