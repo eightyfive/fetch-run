@@ -1,4 +1,4 @@
-import qs from './qs';
+import qs from 'query-string';
 
 const reUri = /^https?:\/\//;
 
@@ -49,7 +49,12 @@ export default class Http {
   }
 
   search(path, query, options) {
-    return this.request('GET', `${path}?${qs(query)}`, undefined, options);
+    return this.request(
+      'GET',
+      `${path}?${qs.stringify(query)}`,
+      undefined,
+      options,
+    );
   }
 
   request(method, path, data, options = {}) {
