@@ -1,4 +1,6 @@
-const json = next => async req => {
+import { Layer, Middleware } from '../http';
+
+export const json: Middleware = (next: Layer) => async (req: Request) => {
   const res = await next(req);
 
   if (res.headers.get('Content-Type') === 'application/json') {
@@ -7,5 +9,3 @@ const json = next => async req => {
 
   return res;
 };
-
-export default json;

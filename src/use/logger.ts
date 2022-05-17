@@ -1,6 +1,6 @@
-import { isJson } from '../utils';
+import { Layer, Middleware } from '../http';
 
-const logger = next => async req => {
+export const logger: Middleware = (next: Layer) => async (req: Request) => {
   const res = await next(req);
 
   let data;
@@ -40,5 +40,3 @@ const logger = next => async req => {
 
   return res;
 };
-
-export default logger;
