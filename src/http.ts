@@ -1,5 +1,4 @@
 import qs from 'query-string';
-import _trimEnd from 'lodash/trimEnd';
 
 export type Layer = (req: Request) => Promise<Response>;
 
@@ -12,12 +11,12 @@ export type JSONObject = { [key: string]: string | number | boolean | null };
 export type BodyData = FormData | JSONObject;
 
 export class Http {
-  baseURI: string;
+  baseUrl: string;
   options: RequestInit;
   stack: Layer;
 
-  constructor(baseURI: string, options?: RequestInit) {
-    this.baseURI = _trimEnd(baseURI, '/');
+  constructor(url: string, options?: RequestInit) {
+    this.baseUrl = url;
     this.options = Object.assign({ headers: {} }, options);
 
     this.stack = (req: Request) => fetch(req);
@@ -92,7 +91,7 @@ export class Http {
     }
 
     // Request
-    const req = new Request(`${this.baseURI}/${path}`, init);
+    const req = new Request(`${this.baseUrl}/${path}`, init);
 
     return this.run(req);
   }
