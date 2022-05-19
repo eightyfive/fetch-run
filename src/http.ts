@@ -1,4 +1,5 @@
 import qs from 'query-string';
+import { Resource } from './resource';
 
 export type Layer = (req: Request) => Promise<Response>;
 
@@ -6,59 +7,60 @@ export type Middleware = (next: Layer) => Layer;
 
 export type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
-export type JSONObject = { [key: string]: string | number | boolean | null };
+export interface Json {
+  [x: string]: string | number | boolean | Date | Json | JsonArray;
+}
 
-export type BodyData = FormData | JSONObject;
+interface JsonArray
+  extends Array<string | number | boolean | Date | Json | JsonArray> {}
+
+const defaultOptions = { headers: {} };
 
 export class Http {
-  baseUrl: string;
-  options: RequestInit;
-  stack: Layer;
+  public baseUrl: string;
+  public options: RequestInit;
+  private stack: Layer;
 
   constructor(url: string, options?: RequestInit) {
     this.baseUrl = url;
-    this.options = Object.assign({ headers: {} }, options);
+    this.options = Object.assign(defaultOptions, options);
 
     this.stack = (req: Request) => fetch(req);
   }
 
-  use(middleware: Middleware) {
+  public use(middleware: Middleware) {
     this.stack = middleware(this.stack);
   }
 
-  run(req: Request) {
-    return this.stack(req);
-  }
-
-  setHeader(name: string, value: string) {
+  public setHeader(name: string, value: string) {
     Object.assign(this.options.headers, { [name]: value });
   }
 
-  setBearer(token: string) {
+  public setBearer(token: string) {
     this.setHeader('Authorization', `Bearer ${token}`);
   }
 
-  get(path: string, options?: RequestInit) {
+  public get(path: string, options?: RequestInit) {
     return this.request('GET', path, undefined, options);
   }
 
-  post(path: string, data: BodyData, options?: RequestInit) {
+  public post<T = Json>(path: string, data: T, options?: RequestInit) {
     return this.request('POST', path, data, options);
   }
 
-  put(path: string, data: BodyData, options?: RequestInit) {
+  public put<T = Json>(path: string, data: T, options?: RequestInit) {
     return this.request('PUT', path, data, options);
   }
 
-  patch(path: string, data: BodyData, options?: RequestInit) {
+  public patch<T = Json>(path: string, data: T, options?: RequestInit) {
     return this.request('PATCH', path, data, options);
   }
 
-  delete(path: string, options?: RequestInit) {
+  public delete(path: string, options?: RequestInit) {
     return this.request('DELETE', path, undefined, options);
   }
 
-  search(path: string, query: JSONObject, options?: RequestInit) {
+  public search(path: string, query: Json, options?: RequestInit) {
     return this.request(
       'GET',
       `${path}?${qs.stringify(query)}`,
@@ -67,32 +69,41 @@ export class Http {
     );
   }
 
-  request(
+  public resource<T, idProperty extends string = 'id'>(endpoint: string) {
+    return new Resource<T, idProperty>(this, endpoint);
+  }
+
+  private request<T>(
     method: Method,
     path: string,
-    data: BodyData | undefined,
+    data: T | undefined,
     options?: RequestInit,
   ) {
     // Headers
     const headers: HeadersInit = Object.assign(
       {},
       this.options.headers,
-      options ? options.headers : undefined,
+      options?.headers,
     );
 
     // Init
-    const init: RequestInit = Object.assign({}, options, {
+    const init: RequestInit = Object.assign({}, this.options, options, {
       method,
       headers: new Headers(headers),
     });
 
     if (data && method !== 'GET') {
-      init.body = data instanceof FormData ? data : JSON.stringify(data);
+      init.body = JSON.stringify(data);
     }
 
     // Request
     const req = new Request(`${this.baseUrl}/${path}`, init);
 
+    // Response
     return this.run(req);
+  }
+
+  private run(req: Request) {
+    return this.stack(req);
   }
 }
