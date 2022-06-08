@@ -66,7 +66,8 @@
     "babel.config.js",
     "metro.config.js",
     "jest.config.js",
-    "jest.setup.ts"
+    "jest.setup.ts",
+    "dist"
   ],
 
   "resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"]

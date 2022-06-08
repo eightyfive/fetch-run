@@ -11,12 +11,13 @@ let api: Api;
 beforeEach(() => {
   jest.clearAllMocks();
   fetchMock.resetMocks();
+  fetchMock.mockResponse('{"foo": "bar"}');
 
   api = new Api('http://example.org');
 });
 
 describe('Api', () => {
-  it('calls fetch', (done) => {
+  it('sets Headers', (done) => {
     api.get<Resource>('api/resource').then(() => {
       const req = fetchMock.mock.calls[0][0];
 

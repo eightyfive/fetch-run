@@ -18,6 +18,7 @@ const params = { foo: 'bar' };
 beforeEach(() => {
   jest.clearAllMocks();
   fetchMock.resetMocks();
+  fetchMock.mockResponse('{"foo": "bar"}');
 
   api = new Api('http://example.org');
   users = new Resource<User>(api, 'users');

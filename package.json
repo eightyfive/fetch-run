@@ -4,7 +4,7 @@
   "description": "Fetch middleware",
   "scripts": {
     "build": "rimraf dist && tsc -p .",
-    "test": "jest",
+    "test": "jest src/",
     "lint": "eslint .",
     "format": "prettier --write 'src/**/*.ts'",
     "release": "np"
