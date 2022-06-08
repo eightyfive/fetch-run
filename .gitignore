@@ -1,6 +1,9 @@
 
 ## https://github.com/github/gitignore/blob/master/Node.gitignore
 
+# App
+dist
+
 # Logs
 logs
 *.log

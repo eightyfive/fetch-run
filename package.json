@@ -3,32 +3,38 @@
   "version": "2.0.0",
   "description": "Fetch middleware",
   "scripts": {
+    "build": "rimraf dist && tsc -p .",
     "test": "jest",
     "lint": "eslint .",
-    "format": "prettier --write '**/*.{js,json,css,yml}'",
-    "release": "np --no-2fa --no-release-draft"
+    "format": "prettier --write 'src/**/*.ts'",
+    "release": "np"
   },
   "keywords": [
     "fetch",
     "middleware"
   ],
-  "main": "./src/http.ts",
-  "author": "Benoit Sagols",
+  "browser": "./dist/index.js",
+  "main": "./src/index.ts",
+  "author": "eightyfive",
   "license": "ISC",
+  "files": [
+    "dist/**/*",
+    "src/**/*"
+  ],
   "devDependencies": {
     "@types/jest": "^27.5.1",
+    "@types/web": "^0.0.67",
     "eslint": "^8.15.0",
     "eslint-config-prettier": "^8.5.0",
     "jest": "^28.1.0",
     "jest-fetch-mock": "^3.0.3",
     "prettier": "^2.6.2",
-    "rxjs": "^6.5.4",
+    "rimraf": "^3.0.2",
     "ts-jest": "^28.0.2",
+    "tslib": "^2.4.0",
     "typescript": "^4.6.4"
   },
   "dependencies": {
-    "@types/lodash": "^4.14.182",
-    "@types/web": "^0.0.66",
     "query-string": "^7.1.1"
   }
 }
