@@ -1,19 +1,6 @@
 import qs from 'query-string';
-import { Resource } from './resource';
 
-export type Layer = (req: Request) => Promise<Response>;
-
-export type Middleware = (next: Layer) => Layer;
-
-export type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-
-export interface Json {
-  [x: string]: string | number | boolean | Date | Json | JsonArray;
-}
-
-interface JsonArray
-  extends Array<string | number | boolean | Date | Json | JsonArray> {}
-
+import { BodyData, JSONObject, Layer, Method, Middleware } from './types';
 const defaultOptions = { headers: {} };
 
 export class Http {
@@ -44,15 +31,15 @@ export class Http {
     return this.request('GET', path, undefined, options);
   }
 
-  public post<T = Json>(path: string, data: T, options?: RequestInit) {
+  public post(path: string, data: BodyData, options?: RequestInit) {
     return this.request('POST', path, data, options);
   }
 
-  public put<T = Json>(path: string, data: T, options?: RequestInit) {
+  public put(path: string, data: BodyData, options?: RequestInit) {
     return this.request('PUT', path, data, options);
   }
 
-  public patch<T = Json>(path: string, data: T, options?: RequestInit) {
+  public patch(path: string, data: BodyData, options?: RequestInit) {
     return this.request('PATCH', path, data, options);
   }
 
@@ -60,40 +47,30 @@ export class Http {
     return this.request('DELETE', path, undefined, options);
   }
 
-  public search(path: string, query: Json, options?: RequestInit) {
-    return this.request(
-      'GET',
-      `${path}?${qs.stringify(query)}`,
-      undefined,
-      options,
-    );
+  public search(path: string, query: JSONObject, options?: RequestInit) {
+    const params = qs.stringify(query);
+
+    if (!params) {
+      return this.request('GET', path, undefined, options);
+    }
+
+    return this.request('GET', `${path}?${params}`, undefined, options);
   }
 
-  public resource<T, idProperty extends string = 'id'>(endpoint: string) {
-    return new Resource<T, idProperty>(this, endpoint);
-  }
-
-  private request<T>(
+  private request(
     method: Method,
     path: string,
-    data: T | undefined,
+    data: BodyData | undefined,
     options?: RequestInit,
-  ) {
-    // Headers
-    const headers: HeadersInit = Object.assign(
-      {},
-      this.options.headers,
-      options?.headers,
-    );
-
+  ): Promise<Response> {
     // Init
-    const init: RequestInit = Object.assign({}, this.options, options, {
+    const init: RequestInit = Object.assign({}, options, {
       method,
-      headers: new Headers(headers),
+      headers: Object.assign({}, this.options.headers, options?.headers),
     });
 
     if (data && method !== 'GET') {
-      init.body = JSON.stringify(data);
+      init.body = data instanceof FormData ? data : JSON.stringify(data);
     }
 
     // Request

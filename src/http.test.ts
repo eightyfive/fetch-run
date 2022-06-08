@@ -1,4 +1,4 @@
-import { Layer } from './http';
+import { Layer } from './types';
 import { Http } from './http';
 import 'jest-fetch-mock';
 
