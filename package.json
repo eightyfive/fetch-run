@@ -18,8 +18,8 @@
   "author": "eightyfive",
   "license": "ISC",
   "files": [
-    "dist/**/*",
-    "src/**/*"
+    "dist",
+    "src"
   ],
   "devDependencies": {
     "@types/jest": "^27.5.1",
