@@ -1,5 +1,5 @@
 import { HTTPError } from '../error';
-import { Layer, Middleware } from '../http';
+import { Layer, Middleware } from '../types';
 
 export const error: Middleware = (next: Layer) => async (req: Request) => {
   const res = await next(req);
@@ -8,5 +8,5 @@ export const error: Middleware = (next: Layer) => async (req: Request) => {
     return res;
   }
 
-  throw new HTTPError(res.status, res.statusText, req.clone(), res.clone());
+  throw new HTTPError(res.clone(), req.clone());
 };

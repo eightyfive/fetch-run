@@ -1,20 +1,14 @@
 export class HTTPError extends Error {
   code: number;
-  name: string;
-  request: Request;
   response: Response;
+  request: Request;
 
-  constructor(
-    code: number,
-    message: string,
-    request: Request,
-    response: Response,
-  ) {
-    super(message);
+  constructor(res: Response, req: Request) {
+    super(res.statusText);
 
-    this.code = code;
+    this.code = res.status;
     this.name = 'HTTPError';
-    this.request = request;
-    this.response = response;
+    this.request = req;
+    this.response = res;
   }
 }
