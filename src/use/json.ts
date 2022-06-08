@@ -1,4 +1,4 @@
-import { Layer, Middleware } from '../http';
+import { Layer, Middleware } from '../types';
 
 export const json: Middleware = (next: Layer) => async (req: Request) => {
   const res = await next(req);
