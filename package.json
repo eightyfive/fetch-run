@@ -1,6 +1,6 @@
 {
   "name": "fetch-run",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Fetch middleware",
   "scripts": {
     "build": "rimraf dist && tsc -p .",
