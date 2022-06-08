@@ -1,13 +1,14 @@
-import { Http, Json } from './http';
+import { Api } from './api';
+import { JSONObject } from './types';
 
 type ResourceId = string | number;
 
-export class Resource<T, idProperty extends string = 'id'> {
-  http: Http;
+export class Resource<T extends JSONObject, idProperty extends string = 'id'> {
+  api: Api;
   endpoint: string;
 
-  constructor(http: Http, endpoint: string) {
-    this.http = http;
+  constructor(api: Api, endpoint: string) {
+    this.api = api;
     this.endpoint = endpoint;
   }
 
@@ -15,30 +16,30 @@ export class Resource<T, idProperty extends string = 'id'> {
 
   // C
   create(data: Omit<T, idProperty>) {
-    return this.http.post<Omit<T, idProperty>>(this.endpoint, data);
+    return this.api.post<T, Omit<T, idProperty>>(this.endpoint, data);
   }
 
   // R
   read(id: ResourceId) {
-    return this.http.get(`${this.endpoint}/${id}`);
+    return this.api.get<T>(`${this.endpoint}/${id}`);
   }
 
   // U
   update(id: ResourceId, data: Omit<T, idProperty>) {
-    return this.http.put<Omit<T, idProperty>>(`${this.endpoint}/${id}`, data);
+    return this.api.put<T, Omit<T, idProperty>>(`${this.endpoint}/${id}`, data);
   }
 
   // D
   delete(id: ResourceId) {
-    return this.http.delete(`${this.endpoint}/${id}`);
+    return this.api.delete<T>(`${this.endpoint}/${id}`);
   }
 
   // L
-  list(query?: Json) {
+  list(query?: JSONObject) {
     if (query) {
-      return this.http.search(this.endpoint, query);
+      return this.api.search<T[]>(this.endpoint, query);
     }
 
-    return this.http.get(this.endpoint);
+    return this.api.get<T[]>(this.endpoint);
   }
 }

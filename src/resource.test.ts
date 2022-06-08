@@ -1,4 +1,4 @@
-import { Http } from './http';
+import { Api } from './api';
 import 'jest-fetch-mock';
 import { Resource } from './resource';
 
@@ -8,7 +8,7 @@ type User = {
   email: string;
 };
 
-let api: Http;
+let api: Api;
 let users: Resource<User>;
 
 const id = 123;
@@ -19,8 +19,8 @@ beforeEach(() => {
   jest.clearAllMocks();
   fetchMock.resetMocks();
 
-  api = new Http('http://example.org');
-  users = api.resource<User>('users');
+  api = new Api('http://example.org');
+  users = new Resource<User>(api, 'users');
 });
 
 describe('Resource', () => {
