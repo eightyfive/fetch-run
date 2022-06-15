@@ -14,8 +14,9 @@
     "middleware"
   ],
   "browser": "./dist/index.js",
+  "react-native": "./src/index.ts",
   "main": "./src/index.ts",
-  "author": "eightyfive",
+  "author": "0x55 <0xfiftyfive@gmail.com>",
   "license": "ISC",
   "files": [
     "dist",
