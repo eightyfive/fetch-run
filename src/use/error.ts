@@ -8,5 +8,5 @@ export const error: Middleware = (next: Layer) => async (req: Request) => {
     return res;
   }
 
-  throw new HTTPError(res.clone(), req.clone());
+  throw new HTTPError(res, req);
 };
