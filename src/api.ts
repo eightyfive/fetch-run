@@ -18,35 +18,49 @@ export class Api extends Http {
     this.use(error);
   }
 
-  get<T>(path: string, options?: RequestInit) {
-    return super.get(path, options).then((res) => res.json() as Promise<T>);
+  get<Res>(path: string, options?: RequestInit) {
+    return super.get(path, options).then((res) => res.json() as Promise<Res>);
   }
 
-  post<T, P extends JSONObject>(path: string, data: P, options?: RequestInit) {
+  post<Res, Req extends JSONObject>(
+    path: string,
+    data: Req,
+    options?: RequestInit,
+  ) {
     return super
       .post(path, data, options)
-      .then((res) => res.json() as Promise<T>);
+      .then((res) => res.json() as Promise<Res>);
   }
 
-  put<T, P extends JSONObject>(path: string, data: P, options?: RequestInit) {
+  put<Res, Req extends JSONObject>(
+    path: string,
+    data: Req,
+    options?: RequestInit,
+  ) {
     return super
       .put(path, data, options)
-      .then((res) => res.json() as Promise<T>);
+      .then((res) => res.json() as Promise<Res>);
   }
 
-  patch<T, P extends JSONObject>(path: string, data: P, options?: RequestInit) {
+  patch<Res, Req extends JSONObject>(
+    path: string,
+    data: Req,
+    options?: RequestInit,
+  ) {
     return super
       .patch(path, data, options)
-      .then((res) => res.json() as Promise<T>);
+      .then((res) => res.json() as Promise<Res>);
   }
 
-  delete<T>(path: string, options?: RequestInit) {
-    return super.delete(path, options).then((res) => res.json() as Promise<T>);
+  delete<Res>(path: string, options?: RequestInit) {
+    return super
+      .delete(path, options)
+      .then((res) => res.json() as Promise<Res>);
   }
 
-  search<T>(path: string, query: JSONObject, options?: RequestInit) {
+  search<Res>(path: string, query: JSONObject, options?: RequestInit) {
     return super
       .search(path, query, options)
-      .then((res) => res.json() as Promise<T>);
+      .then((res) => res.json() as Promise<Res>);
   }
 }
