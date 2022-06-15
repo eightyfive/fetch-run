@@ -4,7 +4,9 @@ export class HTTPError extends Error {
   request: Request;
 
   constructor(res: Response, req: Request) {
-    super(res.statusText);
+    super(
+      res.statusText ? `${res.statusText} (${res.status})` : `${res.status}`,
+    );
 
     this.code = res.status;
     this.name = 'HTTPError';
