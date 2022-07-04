@@ -5,13 +5,15 @@
   "scripts": {
     "build": "rimraf dist && tsc -p .",
     "test": "jest src/",
-    "lint": "eslint .",
-    "format": "prettier --write 'src/**/*.ts'",
     "release": "np"
   },
   "keywords": [
     "fetch",
-    "middleware"
+    "fetch-run",
+    "http",
+    "api",
+    "middleware",
+    "stack"
   ],
   "browser": "./dist/index.js",
   "react-native": "./src/index.ts",
@@ -29,7 +31,7 @@
     "eslint-config-prettier": "^8.5.0",
     "jest": "^28.1.0",
     "jest-fetch-mock": "^3.0.3",
-    "prettier": "^2.6.2",
+    "prettier": "^2.7.1",
     "rimraf": "^3.0.2",
     "ts-jest": "^28.0.2",
     "tslib": "^2.4.0",
