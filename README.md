@@ -5,24 +5,31 @@
 ## Install
 
 ```
-$ yarn add fetch-run
+yarn add fetch-run
 ```
 
 ## Usage
 
 ```js
 import Http from 'fetch-run';
-import jsonResponse from 'fetch-run/use/json';
+import { error, logger } from 'fetch-run/use';
 
 const api = new Http('https://example.org/api/v1');
 
-api.use(jsonResponse);
+api.use(error);
+
+if (__DEV__) {
+  api.use(logger);
+}
+
 api.use(...);
 
 // Later in app
 
 api.post('login', data);
+
 api.get(`users/${id}`).then(user => ...);
+
 api.search('users', { name: 'John' }).then(users => ...);
 ```
 
@@ -38,37 +45,43 @@ Here is more information about the middleware pattern:
 
 A good way to visualize the middleware pattern is to think of the Request/Response lifecycle [as an onion](https://www.google.com/search?q=middleware+onion&tbm=isch). Every middleware added being a new onion layer on top of the previous one.
 
-### Everything is a middleware
+Every middleware takes a [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) in and _must_ give a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) out.
 
-For example `fetch-run` does not assume that you want to convert your API responses to `json`. In order to do so, you have to _explicitly_ include the appropriate middleware:
+```ts
+type Layer = (req: Request) => Promise<Response>;
 
-```js
-import jsonResponse from 'fetch-run/use/json';
-// ...
+type Middleware = (next: Layer) => Layer;
 
-const api = new Http();
+// src/http/my-middleware.ts
 
-api.use(jsonResponse);
+export const myMiddleware: Middleware =
+  (next: Layer) => async (req: Request) => {
+    // Before
+
+    const res: Response = await next(req);
+
+    // After
+
+    return res; // Response
+  };
 ```
 
-Since everything is a middleware, the [order of execution](https://github.com/eightyfive/fetch-run#execution-order-lifo) is important.
-
-### Before/After
-
-`fetch-run` uses [fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) Web APIs standards:
+To do this, `fetch-run` uses Web APIs standards:
 
 - [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request)
 - [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
 - [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers)
 
+### Before/After
+
 Let's write a simple middleware that remembers an "Access Token" and sets it automatically on the Request once available.
 
 ```js
-// <your-app>/src/http/access-token.js
+// src/http/access-token.js
 
 let accessToken;
 
-export default next => async req => {
+export default (next) => async (req) => {
   //
   // BEFORE
   // Modify/Use Request
@@ -95,6 +108,8 @@ export default next => async req => {
 
 ### Execution order (LIFO)
 
+Since everything is a middleware, the _order of execution_ is important.
+
 Middlewares are executed in [LIFO order](https://en.wikipedia.org/wiki/FIFO_and_LIFO_accounting#LIFO) ("Last In, First Out").
 
 Everytime you push a new middleware to the stack, it is added as a new [onion layer](https://www.google.com/search?q=middleware+onion&tbm=isch) on top of all existing ones.
@@ -116,7 +131,7 @@ Execution order:
 
 _Note_: `B` is the most outer layer of the [onion](https://www.google.com/search?q=middleware+onion&tbm=isch).
 
-## `Http` API
+## API
 
 `use(middleware)`
 
@@ -221,7 +236,7 @@ if (__DEV__) {
 ```js
 $ yarn add whatwg-fetch
 
-// <your-app>/src/services/api.js
+// src/services/api.js
 import "whatwg-fetch";
 // ...
 ```
