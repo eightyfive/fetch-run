@@ -22,7 +22,8 @@
   "license": "ISC",
   "files": [
     "dist",
-    "src"
+    "src",
+    "use"
   ],
   "devDependencies": {
     "@types/jest": "^27.5.1",
