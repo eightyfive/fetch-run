@@ -1,6 +1,6 @@
 import qs from 'query-string';
 
-import { BodyData, JSONObject, Layer, Method, Middleware } from './types';
+import { BodyData, Layer, Method, Middleware } from './types';
 const defaultOptions = { headers: {} };
 
 export class Http {
@@ -47,7 +47,7 @@ export class Http {
     return this.request('DELETE', path, undefined, options);
   }
 
-  public search(path: string, query: JSONObject, options?: RequestInit) {
+  public search(path: string, query: object, options?: RequestInit) {
     const params = qs.stringify(query);
 
     if (!params) {
