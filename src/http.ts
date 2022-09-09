@@ -3,9 +3,13 @@ import qs from 'query-string';
 import { BodyData, Layer, Method, Middleware } from './types';
 const defaultOptions = { headers: {} };
 
+type HttpOptions = RequestInit & {
+  headers: HeadersInit;
+};
+
 export class Http {
   public baseUrl: string;
-  public options: RequestInit;
+  public options: HttpOptions;
   private stack: Layer;
 
   constructor(url: string, options?: RequestInit) {
