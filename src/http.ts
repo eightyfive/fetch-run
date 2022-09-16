@@ -1,6 +1,7 @@
 import qs from 'query-string';
 
 import { BodyData, Layer, Method, Middleware } from './types';
+
 const defaultOptions = { headers: {} };
 
 type HttpOptions = RequestInit & {
@@ -14,7 +15,7 @@ export class Http {
 
   constructor(url: string, options?: RequestInit) {
     this.baseUrl = url;
-    this.options = Object.assign(defaultOptions, options);
+    this.options = Object.assign({}, defaultOptions, options);
 
     this.stack = (req: Request) => fetch(req);
   }
