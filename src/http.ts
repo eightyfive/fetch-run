@@ -1,6 +1,9 @@
+import merge from 'lodash.merge';
 import qs from 'query-string';
 
 import { BodyData, Layer, Method, Middleware } from './types';
+
+const { assign } = Object;
 
 const defaultOptions = { headers: {} };
 
@@ -15,7 +18,7 @@ export class Http {
 
   constructor(url: string, options?: RequestInit) {
     this.baseUrl = url;
-    this.options = Object.assign({}, defaultOptions, options);
+    this.options = assign({}, defaultOptions, options);
 
     this.stack = (req: Request) => fetch(req);
   }
@@ -25,7 +28,7 @@ export class Http {
   }
 
   public setHeader(name: string, value: string) {
-    Object.assign(this.options.headers, { [name]: value });
+    assign(this.options.headers, { [name]: value });
   }
 
   public setBearer(token: string) {
@@ -69,9 +72,8 @@ export class Http {
     options?: RequestInit,
   ): Promise<Response> {
     // Init
-    const init: RequestInit = Object.assign({}, options, {
+    const init: RequestInit = merge({}, this.options, options, {
       method,
-      headers: Object.assign({}, this.options.headers, options?.headers),
     });
 
     if (data && method !== 'GET') {
