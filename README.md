@@ -216,15 +216,3 @@ if (__DEV__) {
 ```
 
 [Source code](https://github.com/eightyfive/fetch-run/blob/master/use/logger.js)
-
-## Polyfill
-
-`fetch-run` requires the [fetch](https://github.com/github/fetch) polyfill when applicable.
-
-```js
-$ yarn add whatwg-fetch
-
-// src/services/api.js
-import "whatwg-fetch";
-// ...
-```
