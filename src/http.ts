@@ -39,15 +39,27 @@ export class Http {
     return this.request('GET', path, undefined, options);
   }
 
-  public post(path: string, data?: BodyData, options?: RequestInit) {
+  public post<Req extends BodyData>(
+    path: string,
+    data?: Req,
+    options?: RequestInit,
+  ) {
     return this.request('POST', path, data, options);
   }
 
-  public put(path: string, data?: BodyData, options?: RequestInit) {
+  public put<Req extends BodyData>(
+    path: string,
+    data?: Req,
+    options?: RequestInit,
+  ) {
     return this.request('PUT', path, data, options);
   }
 
-  public patch(path: string, data?: BodyData, options?: RequestInit) {
+  public patch<Req extends BodyData>(
+    path: string,
+    data?: Req,
+    options?: RequestInit,
+  ) {
     return this.request('PATCH', path, data, options);
   }
 
@@ -89,5 +101,9 @@ export class Http {
 
   private run(req: Request) {
     return this.stack(req);
+  }
+
+  public static create(url?: string, options?: RequestInit) {
+    return new Http(url || '', options);
   }
 }

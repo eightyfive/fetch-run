@@ -31,7 +31,7 @@ export class Api extends Http {
     options?: RequestInit,
   ) {
     return super
-      .post(path, data, options)
+      .post<Req>(path, data, options)
       .then((res) => transform(res)) as Promise<Res>;
   }
 
@@ -41,7 +41,7 @@ export class Api extends Http {
     options?: RequestInit,
   ) {
     return super
-      .put(path, data, options)
+      .put<Req>(path, data, options)
       .then((res) => transform(res)) as Promise<Res>;
   }
 
@@ -51,7 +51,7 @@ export class Api extends Http {
     options?: RequestInit,
   ) {
     return super
-      .patch(path, data, options)
+      .patch<Req>(path, data, options)
       .then((res) => transform(res)) as Promise<Res>;
   }
 
