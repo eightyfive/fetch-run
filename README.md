@@ -167,18 +167,6 @@ All `options` are passed down to the [`Request`](https://developer.mozilla.org/e
 
 ## Included middleware
 
-### Json response
-
-- Convert response to JSON
-
-```js
-import jsonResponse from 'fetch-run/use/json';
-
-api.use(jsonResponse);
-```
-
-[Source code](https://github.com/eightyfive/fetch-run/blob/master/use/json.js)
-
 ### HTTP Error
 
 - Catch HTTP responses with error status code (`< 200 || >= 300` – aka [`response.ok`](https://developer.mozilla.org/en-US/docs/Web/API/Response/ok))
