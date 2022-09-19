@@ -1,6 +1,6 @@
 # `fetch-run`
 
-`fetch-run` runs a middleware stack before and after `fetch` call.
+Fetch middleware for the modern minimalist.
 
 ## Install
 
@@ -10,11 +10,11 @@ yarn add fetch-run
 
 ## Usage
 
-```js
-import Http from 'fetch-run';
+```ts
+import { Api } from 'fetch-run';
 import { error, logger } from 'fetch-run/use';
 
-const api = new Http('https://example.org/api/v1');
+const api = Api.create('https://example.org/api/v1');
 
 api.use(error);
 
@@ -22,28 +22,29 @@ if (__DEV__) {
   api.use(logger);
 }
 
-api.use(...);
-
 // Later in app
+type LoginRes = { token: string };
+type LoginReq = { email: string; password };
+type User = { id: number; name: string };
 
-api.post('login', data);
+api.post<LoginRes, LoginReq>('login', data);
 
-api.get(`users/${id}`).then(user => ...);
+api.get<User>(`users/${id}`).then((user) => {});
 
-api.search('users', { name: 'John' }).then(users => ...);
+api.search<User[]>('users', { firstName: 'John' }).then((users) => {});
 ```
 
 ## Middlewares
 
 A simple implementation of the middleware pattern. It allows you to modify the [Request object](https://developer.mozilla.org/en-US/docs/Web/API/Request) before your API call and use the [Response object](https://developer.mozilla.org/en-US/docs/Web/API/Response) right after receiving the response from the server.
 
-Here is more information about the middleware pattern:
+Here are some examples/implementations of the middleware pattern:
 
 - [Using Express middleware](https://expressjs.com/en/guide/using-middleware.html)
 - [Middleware - Laravel](https://laravel.com/docs/5.7/middleware)
 - [Middleware - Redux](https://redux.js.org/advanced/middleware)
 
-A good way to visualize the middleware pattern is to think of the Request/Response lifecycle [as an onion](https://www.google.com/search?q=middleware+onion&tbm=isch). Every middleware added being a new onion layer on top of the previous one.
+A good way to visualize the middleware pattern is to think of the Request/Response lifecycle [as an onion](https://www.google.com/search?q=middleware+onion&tbm=isch). Every middleware added to the stack being a new onion layer on top of the previous one.
 
 Every middleware takes a [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) in and _must_ give a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) out.
 
@@ -66,15 +67,9 @@ export const myMiddleware: Middleware =
   };
 ```
 
-To do this, `fetch-run` uses Web APIs standards:
+### "Before/After" concept
 
-- [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request)
-- [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
-- [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers)
-
-### Before/After
-
-Let's write a simple middleware that remembers an "Access Token" and sets it automatically on the Request once available.
+Let's write a simple middleware that remembers an "access token" and sets a "Bearer header" on the next [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) once available.
 
 ```js
 // src/http/access-token.js
@@ -131,67 +126,137 @@ Execution order:
 
 _Note_: `B` is the most outer layer of the [onion](https://www.google.com/search?q=middleware+onion&tbm=isch).
 
+## `Http` flavour
+
+The library also exports an `Http` flavour that does not transform the [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) to JSON.
+
+```ts
+import { Http } from 'fetch-run';
+
+const http = new Http('https://example.org');
+
+http.use(error);
+
+http.get('index.html').then((res: Response) => {
+  // https://developer.mozilla.org/en-US/docs/Web/API/Response
+  res.blob();
+  res.formData();
+  res.json();
+  res.text();
+  // ...
+});
+```
+
 ## API
 
-`use(middleware)`
+### `constructor(baseUrl: string, defaultOptions?: RequestInit)`
+
+Creates a new instance of `Api` or `Http`.
+
+```ts
+const api = new Api('', { credentials: 'include' });
+
+const http = new Http('https://example.org', {
+  mode: 'no-cors',
+  headers: { 'X-Foo': 'Bar' },
+});
+```
+
+### `static create(baseUrl?: string, defaultOptions?: RequestInit)`
+
+Alternative & convenient way for creating an instance.
+
+```ts
+const api = Api.create('', { credentials: 'include' });
+
+const http = Http.create('https://example.org', {
+  mode: 'no-cors',
+  headers: { 'X-Foo': 'Bar' },
+});
+```
+
+#### Note
+
+`Api.create` will add the following default headers:
+
+```json
+{
+  "Accept": "application/json",
+  "Content-Type": "application/json"
+}
+```
+
+`new Api`, `new Http` & `Http.create` do not.
+
+### `use(middleware: Middleware)`
 
 Adds a middleware to the stack. See [Middlewares](https://github.com/eightyfive/fetch-run#middlewares) and [Execution order (LIFO)](https://github.com/eightyfive/fetch-run#execution-order-lifo) for more information.
 
-`get(path, options)`
+```ts
+type Layer = (req: Request) => Promise<Response>;
+type Middleware = (next: Layer) => Layer;
+```
+
+### `get<Res>(path: string, options?: RequestInit)`
 
 Performs a `GET` request. If you need to pass query parameters to the URL, use `search` instead.
 
-`search(path, params, options)`
+### `search<Res>(path: string, query: object, options?: RequestInit)`
 
 Performs a `GET` request with additional query parameters passed in URL.
 
-`post(path, data, options)`
+### `post<Res, Req extends BodyData>(path: string, data?: Req, options?: RequestInit)`
 
 Performs a `POST` request.
 
-`put(path, data, options)`
+```ts
+type BodyData = FormData | object;
+```
+
+### `put<Res, Req extends BodyData>(path: string, data?: Req, options?: RequestInit)`
 
 Performs a `PUT` request.
 
-`patch(path, data, options)`
+### `patch<Res, Req extends BodyData>(path: string, data?: Req, options?: RequestInit)`
 
 Performs a `PATCH` request.
 
-`delete(path, options)`
+### `delete(path: string, options?: RequestInit)`
 
 Performs a `DELETE` request.
 
-### `options`
+### `options?: RequestInit`
 
-All `options` are passed down to the [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) object.
+All `options` are merged with the default options (`constructor`) and passed down to the [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) object.
 
 ## Included middleware
 
 ### HTTP Error
 
-- Catch HTTP responses with error status code (`< 200 || >= 300` – aka [`response.ok`](https://developer.mozilla.org/en-US/docs/Web/API/Response/ok))
-- Create a custom [`HttpError`](https://github.com/eightyfive/fetch-run/blob/master/http-error.js)
+- Catch HTTP responses with error status code (`< 200 || >= 300` – a.k.a. [`response.ok`](https://developer.mozilla.org/en-US/docs/Web/API/Response/ok))
+- Create a custom [`err: HTTPError`](https://github.com/eightyfive/fetch-run/blob/master/src/error.ts)
 - Set `err.code = res.status`
 - Set `err.message = res.statusText`
-- Set `err.response = res.clone()`
-- Throw `HttpError`
+- Set `err.request = req`
+- Set `err.response = res`
+- Throw `HTTPError`
 
 ```js
-import error from 'fetch-run/use/error';
+import { uses } from 'fetch-run';
 
-api.use(error);
+api.use(uses.error);
 ```
 
 Later in app:
 
 ```js
-import HttpError from 'fetch-run/http-error';
+import { HTTPError } from 'fetch-run';
 
 try {
   api.updateUser(123, { name: 'Tyron' });
 } catch (err) {
-  // or if (err.name === 'HttpError')
-  if (err instanceof HttpError) {
+  // or if (err.name === 'HTTPError')
+  if (err instanceof HTTPError) {
     // err.response.json() ??
   } else {
     throw err;
@@ -199,7 +264,7 @@ try {
 }
 ```
 
-[Source code](https://github.com/eightyfive/fetch-run/blob/master/use/error.js)
+[Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/error.ts)
 
 ### Log requests (DEV)
 
@@ -215,4 +280,4 @@ if (__DEV__) {
 }
 ```
 
-[Source code](https://github.com/eightyfive/fetch-run/blob/master/use/logger.js)
+[Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/logger.ts)
