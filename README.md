@@ -266,18 +266,33 @@ try {
 
 [Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/error.ts)
 
-### Log requests (DEV)
+### Log requests & responses (DEV)
 
 - Log `Request`
 - Log `Response`
 - Log `>= 300` error (trace, message...)
 
 ```js
-import logger from 'fetch-run/use/logger';
+import { uses } from 'fetch-run';
 
 if (__DEV__) {
-  api.use(logger);
+  api.use(uses.logger);
 }
 ```
 
 [Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/logger.ts)
+
+### `XSRF-TOKEN` cookie (CSRF)
+
+For example when used with [Laravel Sanctum](https://laravel.com/docs/9.x/sanctum#csrf-protection).
+
+- Get `XSRF-TOKEN` cookie value
+- Set `X-XSRF-TOKEN` header
+
+```js
+import { uses } from 'fetch-run';
+
+api.use(uses.xsrf);
+```
+
+[Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/xsrf.ts)
