@@ -39,7 +39,7 @@ export class Http {
     return this.request('GET', path, undefined, options);
   }
 
-  public post(path: string, data: BodyData, options?: RequestInit) {
+  public post(path: string, data?: BodyData, options?: RequestInit) {
     return this.request('POST', path, data, options);
   }
 
