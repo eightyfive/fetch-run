@@ -43,11 +43,11 @@ export class Http {
     return this.request('POST', path, data, options);
   }
 
-  public put(path: string, data: BodyData, options?: RequestInit) {
+  public put(path: string, data?: BodyData, options?: RequestInit) {
     return this.request('PUT', path, data, options);
   }
 
-  public patch(path: string, data: BodyData, options?: RequestInit) {
+  public patch(path: string, data?: BodyData, options?: RequestInit) {
     return this.request('PATCH', path, data, options);
   }
 
@@ -70,7 +70,7 @@ export class Http {
     path: string,
     data: BodyData | undefined,
     options?: RequestInit,
-  ): Promise<Response> {
+  ) {
     // Init
     const init: RequestInit = merge({}, this.options, options, {
       method,
