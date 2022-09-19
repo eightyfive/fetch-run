@@ -35,7 +35,7 @@ export class Api extends Http {
       .then((res) => transform(res)) as Promise<Res>;
   }
 
-  public put<Res, Req extends object>(
+  public put<Res, Req extends BodyData>(
     path: string,
     data?: Req,
     options?: RequestInit,
