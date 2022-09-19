@@ -80,7 +80,7 @@ export class Http {
   private request(
     method: Method,
     path: string,
-    data: BodyData | undefined,
+    data: BodyData,
     options?: RequestInit,
   ) {
     // Init

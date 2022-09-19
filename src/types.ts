@@ -4,4 +4,4 @@ export type Middleware = (next: Layer) => Layer;
 
 export type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
-export type BodyData = FormData | object;
+export type BodyData = void | object | FormData;

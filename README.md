@@ -210,7 +210,7 @@ Performs a `GET` request with additional query parameters passed in URL.
 Performs a `POST` request.
 
 ```ts
-type BodyData = FormData | object;
+type BodyData = FormData | object | void;
 ```
 
 ### `put<Res, Req extends BodyData>(path: string, data?: Req, options?: RequestInit)`
