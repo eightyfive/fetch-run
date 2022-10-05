@@ -1,3 +1,5 @@
 {
-    "main": "../src/use/index.ts"
+  "browser": "../dist/use/index.js",
+  "main": "../src/use/index.ts",
+  "react-native": "../src/use/index.ts"
 }

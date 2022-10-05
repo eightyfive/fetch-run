@@ -16,8 +16,8 @@
     "stack"
   ],
   "browser": "./dist/index.js",
-  "react-native": "./src/index.ts",
   "main": "./src/index.ts",
+  "react-native": "./src/index.ts",
   "author": "0x55 <0xfiftyfive@gmail.com>",
   "license": "ISC",
   "files": [
