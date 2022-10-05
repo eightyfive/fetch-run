@@ -12,15 +12,15 @@ yarn add fetch-run
 
 ```ts
 import { Api } from 'fetch-run';
-import { error, logger } from 'fetch-run/use';
+import * as uses from 'fetch-run/use';
 
 const api = Api.create('https://example.org/api/v1');
 
-api.use(error);
-
 if (__DEV__) {
-  api.use(logger);
+  api.use(uses.logger);
 }
+
+api.use(uses.error);
 
 // Later in app
 type LoginRes = { token: string };
@@ -242,9 +242,9 @@ All `options` are merged with the default options (`constructor`) and passed dow
 - Throw `HTTPError`
 
 ```js
-import { uses } from 'fetch-run';
+import { error } from 'fetch-run/use';
 
-api.use(uses.error);
+api.use(error);
 ```
 
 Later in app:
@@ -273,10 +273,10 @@ try {
 - Log `>= 300` error (trace, message...)
 
 ```js
-import { uses } from 'fetch-run';
+import { logger } from 'fetch-run/use';
 
 if (__DEV__) {
-  api.use(uses.logger);
+  api.use(logger);
 }
 ```
 
@@ -290,9 +290,9 @@ For example when used with [Laravel Sanctum](https://laravel.com/docs/9.x/sanctu
 - Set `X-XSRF-TOKEN` header
 
 ```js
-import { uses } from 'fetch-run';
+import { xsrf } from 'fetch-run/use';
 
-api.use(uses.xsrf);
+api.use(xsrf);
 ```
 
 [Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/xsrf.ts)

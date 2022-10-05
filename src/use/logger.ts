@@ -9,34 +9,29 @@ export const logger: Middleware = (next: Layer) => async (req: Request) => {
     data = await res.clone().json();
   }
 
-  console.groupCollapsed(req.url);
-  console.log(req);
-  console.log(res);
-
-  if (data) {
-    console.log(data);
-  }
-
-  console.groupEnd();
+  const title = `${req.method} ${req.url} (${res.status})`;
 
   if (res.status >= 300) {
-    console.group(`Server Error (${res.status})`);
+    if (data) {
+      console.log(prettify(data));
+    }
+
+    console.error(title);
+
+    if (data?.message) {
+      console.error(data.message);
+    }
+  } else {
+    console.log(title);
 
     if (data) {
-      console.error(data.message);
-
-      if (data.exception) {
-        console.log(data.exception);
-      }
-
-      if (data.file) {
-        console.log(`${data.file} (${data.line})`);
-      }
-
-      console.log(data.trace);
-      console.groupEnd();
+      console.log(prettify(data));
     }
   }
 
   return res;
 };
+
+function prettify(data: any) {
+  return JSON.stringify(data, null, 2);
+}
