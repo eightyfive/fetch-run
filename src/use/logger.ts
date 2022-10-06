@@ -1,5 +1,7 @@
 import { Layer, Middleware } from '../types';
 
+const RE_HOSTNAME = /^https?:\/\/[\w-\.:]+/;
+
 export const logger: Middleware = (next: Layer) => async (request: Request) => {
   const req = request.clone();
 
@@ -7,7 +9,9 @@ export const logger: Middleware = (next: Layer) => async (request: Request) => {
 
   const res = response.clone();
 
-  let contents = `${req.method} ${req.url} (${res.status})`;
+  const pathname = req.url.replace(RE_HOSTNAME, '');
+
+  let contents = `${req.method} ${pathname || '/'} (${res.status})`;
 
   if (res.headers.get('Content-Type') === 'application/json') {
     if (req.method !== 'GET') {
