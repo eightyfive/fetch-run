@@ -1,35 +1,31 @@
 import { Layer, Middleware } from '../types';
 
-export const logger: Middleware = (next: Layer) => async (req: Request) => {
-  const res = await next(req);
+export const logger: Middleware = (next: Layer) => async (request: Request) => {
+  const req = request.clone();
 
-  let data;
+  const response = await next(request);
+
+  const res = response.clone();
+
+  let contents = `${req.method} ${req.url} (${res.status})`;
 
   if (res.headers.get('Content-Type') === 'application/json') {
-    data = await res.clone().json();
-  }
+    if (req.method !== 'GET') {
+      contents += '\n';
+      contents += prettify(await req.json());
+    }
 
-  const title = `${req.method} ${req.url} (${res.status})`;
+    contents += '\n';
+    contents += prettify(await res.json());
+  }
 
   if (res.status >= 300) {
-    if (data) {
-      console.log(prettify(data));
-    }
-
-    console.error(title);
-
-    if (data?.message) {
-      console.error(data.message);
-    }
+    console.error(contents);
   } else {
-    console.log(title);
-
-    if (data) {
-      console.log(prettify(data));
-    }
+    console.log(contents);
   }
 
-  return res;
+  return response;
 };
 
 function prettify(data: any) {
