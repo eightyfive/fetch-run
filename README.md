@@ -278,7 +278,7 @@ try {
 
 #### Note (order of execution)
 
-All middlewares registered _after_ the `error` middleware, will not be executed.
+All middlewares registered _after_ the `error` middleware, will not be executed (`error` middleware throws).
 
 This is why, for example, you need to register the `logger` middleware first, so it can log `req` & `res` before the error is thrown.
 
@@ -292,7 +292,7 @@ Error: ENOENT: no such file or directory, open '<app-root>/HTTPError@http:/127.0
 
 This is why we need to throw a "normal" `Error` and unfortunately not the custom `HTTPError` itself (yet?).
 
-This prevents the use of `instanceof HTTPError` + forces to [assert the type](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-assertions) when using Typescript:
+This prevents the use of `instanceof HTTPError` + requires to [assert the type](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-assertions) when using Typescript:
 
 ```ts
 import { HTTPError } from 'fetch-run';
@@ -302,6 +302,7 @@ try {
 } catch (err: Error) {
   // if (err instanceof HTTPError) // Cannot...
   if (err.name === 'HTTPError') {
+    // Assert type...
     (err as HTTPError).response.json(); // ...
   }
 }
@@ -317,9 +318,7 @@ api.use(errorMetro);
 
 ### Log requests & responses (DEV)
 
-- Log `<METHOD> <PATHNAME> (<STATUS>)`
-- Log `Request`
-- Log `Response`
+A simple `Request` & `Response` console logger for when you don't need (yet) the full [Debug Remote JS](https://docs.expo.dev/workflow/debugging/) capabilities.
 
 ```js
 import { logger } from 'fetch-run/use';
@@ -327,6 +326,9 @@ import { logger } from 'fetch-run/use';
 if (__DEV__) {
   api.use(logger);
 }
+
+// Note: To register before `error` middleware (throws)
+// api.use(error)
 ```
 
 [Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/logger.ts)
