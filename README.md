@@ -331,6 +331,10 @@ if (__DEV__) {
 
 [Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/logger.ts)
 
+<img src="images/console-log.png" />
+
+<img src="images/console-error.png" />
+
 ### `XSRF-TOKEN` cookie (CSRF)
 
 For example when used with [Laravel Sanctum](https://laravel.com/docs/9.x/sanctum#csrf-protection).
