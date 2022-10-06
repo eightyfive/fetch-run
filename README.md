@@ -2,6 +2,19 @@
 
 Fetch middleware for the modern minimalist.
 
+- [Install](#install)
+- [Usage](#usage)
+- [Middlewares](#middlewares)
+  - [Before/after concept](#beforeafter-concept)
+  - [Execution order (LIFO)](#execution-order-lifo)
+- [`Http` flavour](#http-flavour)
+- [API](#api)
+- [Included middleware](#included-middleware)
+  - [HTTP error](#http-error)
+  - [HTTP error (Metro bundler)](#http-error-Metro-bundler)
+  - [Log requests & responses (DEV)](#log-requests--responses-dev)
+  - [`XSRF-TOKEN` cookie (CSRF)](#xsrf-token-cookie-csrf)
+
 ## Install
 
 ```
@@ -67,7 +80,7 @@ export const myMiddleware: Middleware =
   };
 ```
 
-### "Before/After" concept
+### Before/after concept
 
 Let's write a simple middleware that remembers an "access token" and sets a "Bearer header" on the next [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) once available.
 
