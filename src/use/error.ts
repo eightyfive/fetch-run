@@ -1,4 +1,4 @@
-import { HTTPError } from '../error';
+import { HTTPError } from '../http-error';
 import { Layer, Middleware } from '../types';
 
 export const error: Middleware = (next: Layer) => async (request: Request) => {
