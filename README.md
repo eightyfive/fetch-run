@@ -11,7 +11,7 @@ Fetch middleware for the modern minimalist.
 - [API](#api)
 - [Included middleware](#included-middleware)
   - [HTTP error](#http-error)
-  - [HTTP error (Metro bundler)](#http-error-Metro-bundler)
+  - [HTTP error (Metro bundler)](#http-error-metro-bundler)
   - [Log requests & responses (DEV)](#log-requests--responses-dev)
   - [`XSRF-TOKEN` cookie (CSRF)](#xsrf-token-cookie-csrf)
 
