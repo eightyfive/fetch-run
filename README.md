@@ -317,9 +317,9 @@ api.use(errorMetro);
 
 ### Log requests & responses (DEV)
 
+- Log `<METHOD> <PATHNAME> (<STATUS>)`
 - Log `Request`
 - Log `Response`
-- Log `>= 300` error (trace, message...)
 
 ```js
 import { logger } from 'fetch-run/use';
