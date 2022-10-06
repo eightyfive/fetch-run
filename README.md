@@ -234,7 +234,7 @@ All `options` are merged with the default options (`constructor`) and passed dow
 ### HTTP Error
 
 - Catch HTTP responses with error status code (`< 200 || >= 300` – a.k.a. [`response.ok`](https://developer.mozilla.org/en-US/docs/Web/API/Response/ok))
-- Create a custom [`err: HTTPError`](https://github.com/eightyfive/fetch-run/blob/master/src/error.ts)
+- Create a custom [`err: HTTPError`](https://github.com/eightyfive/fetch-run/blob/master/src/error.ts)-ish (see Warning)
 - Set `err.code = res.status`
 - Set `err.message = res.statusText`
 - Set `err.request = req`
@@ -250,21 +250,49 @@ api.use(error);
 Later in app:
 
 ```js
-import { HTTPError } from 'fetch-run';
+// See warning
+// import { HTTPError } from 'fetch-run';
 
 try {
   api.updateUser(123, { name: 'Tyron' });
 } catch (err) {
-  // or if (err.name === 'HTTPError')
-  if (err instanceof HTTPError) {
-    // err.response.json() ??
+  // See warning: Cannot use `instanceof`
+  // if (err instanceof HTTPError)
+
+  if (err.name === 'HTTPError') {
+    err.response.json(); //...
   } else {
     throw err;
   }
 }
 ```
 
-[Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/error.ts)
+#### Warning
+
+The Metro bundler (React Native, expo at least) fails with `ENOENT` error when throwing a [custom `Error`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error#custom_error_types):
+
+```
+Error: ENOENT: no such file or directory, open '<app-root>/HTTPError@http:/127.0.0.1:19000/node_modules/expo/AppEntry.bundle?platform=ios&dev=true&hot=false'
+```
+
+This is why the error middleware throws a "normal" `Error` and unfortunately not the custom `HTTPError` itself (yet?).
+
+This prevents the use of `instanceof HTTPError` + forces to [assert the type](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-assertions) when using Typescript:
+
+```ts
+import { HTTPError } from 'fetch-run';
+
+try {
+  // ...
+} catch (err: Error) {
+  // if (err instanceof HTTPError) // Cannot...
+  if (err.name === 'HTTPError') {
+    (err as HTTPError).response.json(); // ...
+  }
+}
+```
+
+See [source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/error.ts) for more details.
 
 ### Log requests & responses (DEV)
 
