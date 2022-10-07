@@ -3,7 +3,7 @@ import { BodyData } from './types';
 
 type ID = string | number;
 
-export class Resource<T extends object = never> {
+export class Resource<T extends object> {
   private api: Api;
   public endpoint: string;
 
@@ -16,7 +16,7 @@ export class Resource<T extends object = never> {
 
   // C
   public create<Req extends BodyData = Omit<T, 'id'>>(data: Req) {
-    return this.api.post<T, Req>(this.endpoint, data);
+    return this.api.post<T | void, Req>(this.endpoint, data);
   }
 
   // R
@@ -26,7 +26,7 @@ export class Resource<T extends object = never> {
 
   // U
   public update<Req extends BodyData = Omit<T, 'id'>>(id: ID, data: Req) {
-    return this.api.put<T, Req>(`${this.endpoint}/${id}`, data);
+    return this.api.put<T | void, Req>(`${this.endpoint}/${id}`, data);
   }
 
   // D
