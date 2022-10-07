@@ -22,6 +22,7 @@
   "license": "ISC",
   "files": [
     "dist",
+    "images",
     "src",
     "use"
   ],
