@@ -1,9 +1,14 @@
 import { Api } from './api';
 import { BodyData } from './types';
 
-type ID = string | number;
+export type ResourceId = string | number;
 
-export class Resource<T extends object> {
+export type ResourceData<
+  T extends object,
+  idAttribute extends string = 'id',
+> = Omit<T, idAttribute>;
+
+export class Resource<T extends object, idAttribute extends string = 'id'> {
   private api: Api;
   public endpoint: string;
 
@@ -15,22 +20,27 @@ export class Resource<T extends object> {
   // CRUDL
 
   // C
-  public create<Req extends BodyData = Omit<T, 'id'>>(data: Req) {
+  public create<Req extends BodyData = ResourceData<T, idAttribute>>(
+    data: Req,
+  ) {
     return this.api.post<T | void, Req>(this.endpoint, data);
   }
 
   // R
-  public read(id: ID) {
+  public read(id: ResourceId) {
     return this.api.get<T>(`${this.endpoint}/${id}`);
   }
 
   // U
-  public update<Req extends BodyData = Omit<T, 'id'>>(id: ID, data: Req) {
+  public update<Req extends BodyData = ResourceData<T, idAttribute>>(
+    id: ResourceId,
+    data: Req,
+  ) {
     return this.api.put<T | void, Req>(`${this.endpoint}/${id}`, data);
   }
 
   // D
-  public delete<Res = void>(id: ID) {
+  public delete<Res = void>(id: ResourceId) {
     return this.api.delete<Res>(`${this.endpoint}/${id}`);
   }
 
