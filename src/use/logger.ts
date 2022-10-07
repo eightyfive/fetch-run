@@ -14,13 +14,17 @@ export const logger: Middleware = (next: Layer) => async (request: Request) => {
   let contents = `${req.method} ${pathname || '/'} (${res.status})`;
 
   if (res.headers.get('Content-Type') === 'application/json') {
-    if (req.method !== 'GET') {
+    if (req.body) {
       contents += '\n';
       contents += prettify(await req.json());
     }
 
-    contents += '\n';
-    contents += prettify(await res.json());
+    const data = await res.json();
+
+    if (data) {
+      contents += '\n';
+      contents += prettify(data);
+    }
   }
 
   if (res.status >= 300) {
