@@ -1,5 +1,4 @@
 import { Api } from './api';
-import { BodyData } from './types';
 
 export type ResourceId = string | number;
 
@@ -20,10 +19,10 @@ export class Resource<T extends object, idAttribute extends string = 'id'> {
   // CRUDL
 
   // C
-  public create<Req extends BodyData = ResourceData<T, idAttribute>>(
+  public create<Res = T, Req extends object = ResourceData<T, idAttribute>>(
     data: Req,
   ) {
-    return this.api.post<T | void, Req>(this.endpoint, data);
+    return this.api.post<Res, Req>(this.endpoint, data);
   }
 
   // R
@@ -32,11 +31,11 @@ export class Resource<T extends object, idAttribute extends string = 'id'> {
   }
 
   // U
-  public update<Req extends BodyData = ResourceData<T, idAttribute>>(
+  public update<Res = T, Req extends object = ResourceData<T, idAttribute>>(
     id: ResourceId,
     data: Req,
   ) {
-    return this.api.put<T | void, Req>(`${this.endpoint}/${id}`, data);
+    return this.api.put<Res, Req>(`${this.endpoint}/${id}`, data);
   }
 
   // D
