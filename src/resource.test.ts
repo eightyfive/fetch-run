@@ -1,4 +1,5 @@
 import 'jest-fetch-mock';
+import qs from 'query-string';
 
 import { Api } from './api';
 import { Resource } from './resource';
@@ -23,55 +24,61 @@ beforeEach(() => {
 
   api = Api.create('http://example.org');
 
-  users = new Resource<User>(api, 'users');
+  users = api.resource<User>('users');
 });
 
 describe('Resource', () => {
   it('create', () => {
-    const spy = jest.spyOn(api, 'post');
+    // @ts-ignore
+    const spy = jest.spyOn(users, 'request');
 
     users.create(data);
 
-    expect(spy).toHaveBeenCalledWith('users', data);
+    expect(spy).toHaveBeenCalledWith('POST', 'users', data);
   });
 
   it('read', () => {
-    const spy = jest.spyOn(api, 'get');
+    // @ts-ignore
+    const spy = jest.spyOn(users, 'request');
 
     users.read(id);
 
-    expect(spy).toHaveBeenCalledWith(`users/${id}`);
+    expect(spy).toHaveBeenCalledWith('GET', `users/${id}`);
   });
 
   it('update', () => {
-    const spy = jest.spyOn(api, 'put');
+    // @ts-ignore
+    const spy = jest.spyOn(users, 'request');
 
     users.update(id, data);
 
-    expect(spy).toHaveBeenCalledWith(`users/${id}`, data);
+    expect(spy).toHaveBeenCalledWith('PUT', `users/${id}`, data);
   });
 
   it('delete', () => {
-    const spy = jest.spyOn(api, 'delete');
+    // @ts-ignore
+    const spy = jest.spyOn(users, 'request');
 
     users.delete(id);
 
-    expect(spy).toHaveBeenCalledWith(`users/${id}`);
+    expect(spy).toHaveBeenCalledWith('DELETE', `users/${id}`);
   });
 
   it('list', () => {
-    const spy = jest.spyOn(api, 'get');
+    // @ts-ignore
+    const spy = jest.spyOn(users, 'request');
 
     users.list();
 
-    expect(spy).toHaveBeenCalledWith('users');
+    expect(spy).toHaveBeenCalledWith('GET', 'users');
   });
 
-  it('search', () => {
-    const spy = jest.spyOn(api, 'search');
+  it('list (search)', () => {
+    // @ts-ignore
+    const spy = jest.spyOn(users, 'request');
 
     users.list(params);
 
-    expect(spy).toHaveBeenCalledWith('users', params);
+    expect(spy).toHaveBeenCalledWith('GET', `users?${qs.stringify(params)}`);
   });
 });

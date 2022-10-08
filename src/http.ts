@@ -1,28 +1,11 @@
-import merge from 'lodash.merge';
 import qs from 'query-string';
 
-import { BodyData, Layer, Method, Middleware } from './types';
+import { HttpBase } from './http-base';
+import { BodyData, Middleware } from './types';
 
 const { assign } = Object;
 
-const defaultOptions = { headers: {} };
-
-type HttpOptions = RequestInit & {
-  headers: HeadersInit;
-};
-
-export class Http {
-  public baseUrl: string;
-  public options: HttpOptions;
-  private stack: Layer;
-
-  constructor(url: string, options?: RequestInit) {
-    this.baseUrl = url;
-    this.options = assign({}, defaultOptions, options);
-
-    this.stack = (req: Request) => fetch(req);
-  }
-
+export class Http extends HttpBase {
   public use(middleware: Middleware) {
     this.stack = middleware(this.stack);
   }
@@ -68,39 +51,12 @@ export class Http {
   }
 
   public search(path: string, query: object, options?: RequestInit) {
-    const params = qs.stringify(query);
-
-    if (!params) {
-      return this.request('GET', path, undefined, options);
-    }
-
-    return this.request('GET', `${path}?${params}`, undefined, options);
-  }
-
-  private request(
-    method: Method,
-    path: string,
-    data: BodyData,
-    options?: RequestInit,
-  ) {
-    // Init
-    const init: RequestInit = merge({}, this.options, options, {
-      method,
-    });
-
-    if (data && method !== 'GET') {
-      init.body = data instanceof FormData ? data : JSON.stringify(data);
-    }
-
-    // Request
-    const req = new Request(`${this.baseUrl}/${path}`, init);
-
-    // Response
-    return this.run(req);
-  }
-
-  private run(req: Request) {
-    return this.stack(req);
+    return this.request(
+      'GET',
+      `${path}?${qs.stringify(query)}`,
+      undefined,
+      options,
+    );
   }
 
   public static create(url?: string, options?: RequestInit) {

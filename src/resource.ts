@@ -1,4 +1,7 @@
-import { Api } from './api';
+import qs from 'query-string';
+
+import { HttpBase } from './http-base';
+import { toJSON } from './utils';
 
 export type ResourceId = string | number;
 
@@ -7,12 +10,15 @@ export type ResourceData<
   idAttribute extends string = 'id',
 > = Omit<T, idAttribute>;
 
-export class Resource<T extends object, idAttribute extends string = 'id'> {
-  private api: Api;
+export class Resource<
+  T extends object,
+  idAttribute extends string = 'id',
+> extends HttpBase {
   public endpoint: string;
 
-  constructor(api: Api, endpoint: string) {
-    this.api = api;
+  constructor(endpoint: string, baseUrl: string, options?: RequestInit) {
+    super(baseUrl, options);
+
     this.endpoint = endpoint;
   }
 
@@ -22,12 +28,16 @@ export class Resource<T extends object, idAttribute extends string = 'id'> {
   public create<Res = T, Req extends object = ResourceData<T, idAttribute>>(
     data: Req,
   ) {
-    return this.api.post<Res, Req>(this.endpoint, data);
+    return this.request('POST', this.endpoint, data).then((res) =>
+      toJSON<Res>(res),
+    );
   }
 
   // R
-  public read(id: ResourceId) {
-    return this.api.get<T>(`${this.endpoint}/${id}`);
+  public read<T>(id: ResourceId) {
+    return this.request('GET', `${this.endpoint}/${id}`).then((res) =>
+      toJSON<T>(res),
+    );
   }
 
   // U
@@ -35,20 +45,26 @@ export class Resource<T extends object, idAttribute extends string = 'id'> {
     id: ResourceId,
     data: Req,
   ) {
-    return this.api.put<Res, Req>(`${this.endpoint}/${id}`, data);
+    return this.request('PUT', `${this.endpoint}/${id}`, data).then((res) =>
+      toJSON<Res>(res),
+    );
   }
 
   // D
   public delete<Res = void>(id: ResourceId) {
-    return this.api.delete<Res>(`${this.endpoint}/${id}`);
+    return this.request('DELETE', `${this.endpoint}/${id}`).then((res) =>
+      toJSON<Res>(res),
+    );
   }
 
   // L
   public list(query?: object) {
+    let path = this.endpoint;
+
     if (query) {
-      return this.api.search<T[]>(this.endpoint, query);
+      path += `?${qs.stringify(query)}`;
     }
 
-    return this.api.get<T[]>(this.endpoint);
+    return this.request('GET', path).then((res) => toJSON<T[]>(res));
   }
 }

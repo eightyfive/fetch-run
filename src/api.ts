@@ -1,7 +1,9 @@
 import merge from 'lodash.merge';
 
 import { Http } from './http';
+import { Resource } from './resource';
 import { BodyData } from './types';
+import { toJSON } from './utils';
 
 const defaultOptions = {
   headers: {
@@ -10,19 +12,9 @@ const defaultOptions = {
   },
 };
 
-function transform(res: Response) {
-  if (res.status === 204) {
-    return Promise.resolve();
-  }
-
-  return res.json();
-}
-
 export class Api extends Http {
   public get<Res>(path: string, options?: RequestInit) {
-    return super
-      .get(path, options)
-      .then((res) => transform(res)) as Promise<Res>;
+    return super.get(path, options).then((res) => toJSON<Res>(res));
   }
 
   public post<Res, Req extends BodyData>(
@@ -30,9 +22,7 @@ export class Api extends Http {
     data?: Req,
     options?: RequestInit,
   ) {
-    return super
-      .post<Req>(path, data, options)
-      .then((res) => transform(res)) as Promise<Res>;
+    return super.post<Req>(path, data, options).then((res) => toJSON<Res>(res));
   }
 
   public put<Res, Req extends BodyData>(
@@ -40,9 +30,7 @@ export class Api extends Http {
     data?: Req,
     options?: RequestInit,
   ) {
-    return super
-      .put<Req>(path, data, options)
-      .then((res) => transform(res)) as Promise<Res>;
+    return super.put<Req>(path, data, options).then((res) => toJSON<Res>(res));
   }
 
   public patch<Res, Req extends BodyData>(
@@ -52,19 +40,19 @@ export class Api extends Http {
   ) {
     return super
       .patch<Req>(path, data, options)
-      .then((res) => transform(res)) as Promise<Res>;
+      .then((res) => toJSON<Res>(res));
   }
 
   public delete<Res>(path: string, options?: RequestInit) {
-    return super
-      .delete(path, options)
-      .then((res) => transform(res)) as Promise<Res>;
+    return super.delete(path, options).then((res) => toJSON<Res>(res));
   }
 
   public search<Res>(path: string, query: object, options?: RequestInit) {
-    return super
-      .search(path, query, options)
-      .then((res) => transform(res)) as Promise<Res>;
+    return super.search(path, query, options).then((res) => toJSON<Res>(res));
+  }
+
+  public resource<T extends object>(endpoint: string) {
+    return new Resource<T>(endpoint, this.baseUrl, this.options);
   }
 
   public static create(url?: string, options?: RequestInit) {
