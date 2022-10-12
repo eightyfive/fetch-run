@@ -15,11 +15,15 @@ export class HttpBase {
   public options: HttpOptions;
   protected stack: Layer;
 
-  constructor(baseUrl: string, options?: RequestInit) {
+  constructor(baseUrl: string, options?: RequestInit, stack?: Layer) {
     this.baseUrl = baseUrl;
     this.options = assign({}, defaultOptions, options);
 
-    this.stack = (req: Request) => fetch(req);
+    if (stack) {
+      this.stack = stack.bind(this);
+    } else {
+      this.stack = (req: Request) => fetch(req);
+    }
   }
 
   public use(middleware: Middleware) {

@@ -52,7 +52,7 @@ export class Api extends Http {
   }
 
   public resource<T extends object>(endpoint: string) {
-    return new Resource<T>(endpoint, this.baseUrl, this.options);
+    return new Resource<T>([endpoint], this.baseUrl, this.options, this.stack);
   }
 
   public static create(url?: string, options?: RequestInit) {

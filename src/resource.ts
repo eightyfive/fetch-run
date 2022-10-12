@@ -1,6 +1,7 @@
 import qs from 'query-string';
 
 import { HttpBase } from './http-base';
+import { Layer } from './types';
 import { toJSON } from './utils';
 
 export type ResourceId = string | number;
@@ -15,27 +16,43 @@ export class Resource<
   idAttribute extends string = 'id',
 > extends HttpBase {
   public endpoint: string;
+  public endpoints: string[];
 
-  constructor(endpoint: string, baseUrl: string, options?: RequestInit) {
-    super(baseUrl, options);
+  constructor(
+    endpoints: string[],
+    baseUrl: string,
+    options?: RequestInit,
+    stack?: Layer,
+  ) {
+    super(baseUrl, options, stack);
 
-    this.endpoint = endpoint;
+    // @ts-ignore
+    this.endpoint = endpoints.pop();
+    this.endpoints = endpoints;
   }
 
-  // CRUDL
+  // CRUDLS
+
+  // - Create
+  // - Read
+  // - Update
+  // - Delete
+  // - List
+  // - Search
 
   // C
   public create<Res = T, Req extends object = ResourceData<T, idAttribute>>(
     data: Req,
+    ...ids: ResourceId[]
   ) {
-    return this.request('POST', this.endpoint, data).then((res) =>
+    return this.request('POST', this.getUrl(ids), data).then((res) =>
       toJSON<Res>(res),
     );
   }
 
   // R
-  public read<T>(id: ResourceId) {
-    return this.request('GET', `${this.endpoint}/${id}`).then((res) =>
+  public read<T>(id: ResourceId, ...ids: ResourceId[]) {
+    return this.request('GET', this.getUrl(ids, id)).then((res) =>
       toJSON<T>(res),
     );
   }
@@ -44,27 +61,59 @@ export class Resource<
   public update<Res = T, Req extends object = ResourceData<T, idAttribute>>(
     id: ResourceId,
     data: Req,
+    ...ids: ResourceId[]
   ) {
-    return this.request('PUT', `${this.endpoint}/${id}`, data).then((res) =>
+    return this.request('PUT', this.getUrl(ids, id), data).then((res) =>
       toJSON<Res>(res),
     );
   }
 
   // D
-  public delete<Res = void>(id: ResourceId) {
-    return this.request('DELETE', `${this.endpoint}/${id}`).then((res) =>
+  public delete<Res = void>(id: ResourceId, ...ids: ResourceId[]) {
+    return this.request('DELETE', this.getUrl(ids, id)).then((res) =>
       toJSON<Res>(res),
     );
   }
 
   // L
-  public list(query?: object) {
-    let path = this.endpoint;
+  public list(...ids: ResourceId[]) {
+    return this.request('GET', this.getUrl(ids)).then((res) =>
+      toJSON<T[]>(res),
+    );
+  }
 
-    if (query) {
-      path += `?${qs.stringify(query)}`;
+  // Search
+  public search(query: object, ...ids: ResourceId[]) {
+    return this.request(
+      'GET',
+      `${this.getUrl(ids)}?${qs.stringify(query)}`,
+    ).then((res) => toJSON<T[]>(res));
+  }
+
+  protected getUrl(ids: ResourceId[], id?: ResourceId) {
+    let url = `${this.getBaseUrl(ids)}/${this.endpoint}`;
+
+    if (!id) {
+      return url;
     }
 
-    return this.request('GET', path).then((res) => toJSON<T[]>(res));
+    return `${url}/${id}`;
+  }
+
+  protected getBaseUrl(parents: ResourceId[]) {
+    const ids = Array.from(parents).reverse();
+
+    return this.endpoints
+      .map((endpoint, index) => `${endpoint}/${ids[index]}`)
+      .join('/');
+  }
+
+  public resource<R extends object>(endpoint: string) {
+    return new Resource<R>(
+      [...this.endpoints, this.endpoint, endpoint],
+      this.baseUrl,
+      this.options,
+      this.stack,
+    );
   }
 }
