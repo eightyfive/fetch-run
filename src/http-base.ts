@@ -63,4 +63,9 @@ export class HttpBase {
   protected run(req: Request) {
     return this.stack(req);
   }
+
+  public clone() {
+    // @ts-ignore
+    return new this.constructor(this.baseUrl, { ...this.options }, this.stack);
+  }
 }
