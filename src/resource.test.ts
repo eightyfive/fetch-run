@@ -7,11 +7,22 @@ import { Resource } from './resource';
 type User = {
   id: number;
   name: string;
-  email: string;
+};
+
+type Post = {
+  id: number;
+  title: string;
+};
+
+type Comment = {
+  id: number;
+  content: string;
 };
 
 let api: Api;
-let users: Resource<User>;
+let user: Resource<User>;
+let userPost: Resource<Post>;
+let userPostComment: Resource<Comment>;
 
 const id = 123;
 const data = { name: 'John', email: 'john.smith@example.org' };
@@ -24,61 +35,171 @@ beforeEach(() => {
 
   api = Api.create('http://example.org');
 
-  users = api.resource<User>('users');
+  user = api.resource<User>('users');
+  userPost = user.resource<Post>('posts');
+  userPostComment = userPost.resource<Post>('comments');
 });
 
 describe('Resource', () => {
   it('create', () => {
     // @ts-ignore
-    const spy = jest.spyOn(users, 'request');
+    const spy = jest.spyOn(user.api, 'request');
 
-    users.create(data);
+    user.create(data);
 
-    expect(spy).toHaveBeenCalledWith('POST', 'users', data);
+    expect(spy).toHaveBeenCalledWith('POST', 'users', data, undefined);
   });
 
   it('read', () => {
     // @ts-ignore
-    const spy = jest.spyOn(users, 'request');
+    const spy = jest.spyOn(user.api, 'request');
 
-    users.read(id);
+    user.read(id);
 
-    expect(spy).toHaveBeenCalledWith('GET', `users/${id}`);
+    expect(spy).toHaveBeenCalledWith(
+      'GET',
+      `users/${id}`,
+      undefined,
+      undefined,
+    );
   });
 
   it('update', () => {
     // @ts-ignore
-    const spy = jest.spyOn(users, 'request');
+    const spy = jest.spyOn(user.api, 'request');
 
-    users.update(id, data);
+    user.update(id, data);
 
-    expect(spy).toHaveBeenCalledWith('PUT', `users/${id}`, data);
+    expect(spy).toHaveBeenCalledWith('PUT', `users/${id}`, data, undefined);
   });
 
   it('delete', () => {
     // @ts-ignore
-    const spy = jest.spyOn(users, 'request');
+    const spy = jest.spyOn(user.api, 'request');
 
-    users.delete(id);
+    user.delete(id);
 
-    expect(spy).toHaveBeenCalledWith('DELETE', `users/${id}`);
+    expect(spy).toHaveBeenCalledWith(
+      'DELETE',
+      `users/${id}`,
+      undefined,
+      undefined,
+    );
   });
 
   it('list', () => {
     // @ts-ignore
-    const spy = jest.spyOn(users, 'request');
+    const spy = jest.spyOn(user.api, 'request');
 
-    users.list();
+    user.list();
 
-    expect(spy).toHaveBeenCalledWith('GET', 'users');
+    expect(spy).toHaveBeenCalledWith('GET', 'users', undefined, undefined);
   });
 
-  it('list (search)', () => {
+  it('search', () => {
     // @ts-ignore
-    const spy = jest.spyOn(users, 'request');
+    const spy = jest.spyOn(user.api, 'request');
 
-    users.list(params);
+    user.search(params);
 
-    expect(spy).toHaveBeenCalledWith('GET', `users?${qs.stringify(params)}`);
+    expect(spy).toHaveBeenCalledWith(
+      'GET',
+      `users?${qs.stringify(params)}`,
+      undefined,
+      undefined,
+    );
+  });
+
+  it('create (deep)', () => {
+    // @ts-ignore
+    const spy = jest.spyOn(user.api, 'request');
+
+    userPost.create(data, 1);
+
+    expect(spy).toHaveBeenCalledWith('POST', 'users/1/posts', data, undefined);
+  });
+
+  it('read (deep)', () => {
+    // @ts-ignore
+    const spy = jest.spyOn(user.api, 'request');
+
+    userPost.read(id, 1);
+
+    expect(spy).toHaveBeenCalledWith(
+      'GET',
+      `users/1/posts/${id}`,
+      undefined,
+      undefined,
+    );
+  });
+
+  it('update (deep)', () => {
+    // @ts-ignore
+    const spy = jest.spyOn(user.api, 'request');
+
+    userPost.update(id, data, 1);
+
+    expect(spy).toHaveBeenCalledWith(
+      'PUT',
+      `users/1/posts/${id}`,
+      data,
+      undefined,
+    );
+  });
+
+  it('delete (deep)', () => {
+    // @ts-ignore
+    const spy = jest.spyOn(user.api, 'request');
+
+    userPost.delete(id, 1);
+
+    expect(spy).toHaveBeenCalledWith(
+      'DELETE',
+      `users/1/posts/${id}`,
+      undefined,
+      undefined,
+    );
+  });
+
+  it('list (deep)', () => {
+    // @ts-ignore
+    const spy = jest.spyOn(user.api, 'request');
+
+    userPost.list(1);
+
+    expect(spy).toHaveBeenCalledWith(
+      'GET',
+      'users/1/posts',
+      undefined,
+      undefined,
+    );
+  });
+
+  it('search (deep)', () => {
+    // @ts-ignore
+    const spy = jest.spyOn(user.api, 'request');
+
+    userPost.search(params, 1);
+
+    expect(spy).toHaveBeenCalledWith(
+      'GET',
+      `users/1/posts?${qs.stringify(params)}`,
+      undefined,
+      undefined,
+    );
+  });
+
+  it('read (super deep)', () => {
+    // @ts-ignore
+    const spy = jest.spyOn(user.api, 'request');
+
+    userPostComment.read(id, 2, 1);
+
+    expect(spy).toHaveBeenCalledWith(
+      'GET',
+      `users/1/posts/2/comments/${id}`,
+      undefined,
+      undefined,
+    );
   });
 });

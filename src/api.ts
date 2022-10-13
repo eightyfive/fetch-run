@@ -2,7 +2,7 @@ import merge from 'lodash.merge';
 
 import { Http } from './http';
 import { Resource } from './resource';
-import { BodyData } from './types';
+import { BodyData, IApi } from './types';
 import { toJSON } from './utils';
 
 const defaultOptions = {
@@ -12,7 +12,7 @@ const defaultOptions = {
   },
 };
 
-export class Api extends Http {
+export class Api extends Http implements IApi {
   public get<Res>(path: string, options?: RequestInit) {
     return super.get(path, options).then((res) => toJSON<Res>(res));
   }
@@ -52,7 +52,7 @@ export class Api extends Http {
   }
 
   public resource<T extends object>(endpoint: string) {
-    return new Resource<T>([endpoint], this.baseUrl, this.options, this.stack);
+    return new Resource<T>(this, endpoint);
   }
 
   public static create(url?: string, options?: RequestInit) {
