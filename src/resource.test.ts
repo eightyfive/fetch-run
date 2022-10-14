@@ -202,4 +202,51 @@ describe('Resource', () => {
       undefined,
     );
   });
+
+  it('build query key', () => {
+    const USER_ID = 1;
+    const POST_ID = 2;
+    const COMMENT_ID = 3;
+
+    expect(user.getQueryKey()).toEqual(['users']);
+    expect(user.getQueryKey([], USER_ID)).toEqual(['users', USER_ID]);
+
+    expect(userPost.getQueryKey()).toEqual(['users', undefined, 'posts']);
+    expect(userPost.getQueryKey([USER_ID])).toEqual([
+      'users',
+      USER_ID,
+      'posts',
+    ]);
+    expect(userPost.getQueryKey([USER_ID], POST_ID)).toEqual([
+      'users',
+      USER_ID,
+      'posts',
+      POST_ID,
+    ]);
+
+    expect(userPostComment.getQueryKey()).toEqual([
+      'users',
+      undefined,
+      'posts',
+      undefined,
+      'comments',
+    ]);
+    expect(userPostComment.getQueryKey([USER_ID])).toEqual([
+      'users',
+      USER_ID,
+      'posts',
+      undefined,
+      'comments',
+    ]);
+    expect(userPostComment.getQueryKey([POST_ID, USER_ID])).toEqual([
+      'users',
+      USER_ID,
+      'posts',
+      POST_ID,
+      'comments',
+    ]);
+    expect(userPostComment.getQueryKey([POST_ID, USER_ID], COMMENT_ID)).toEqual(
+      ['users', USER_ID, 'posts', POST_ID, 'comments', COMMENT_ID],
+    );
+  });
 });

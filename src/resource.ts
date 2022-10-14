@@ -65,6 +65,22 @@ export class Resource<T extends object, idAttribute extends string = 'id'> {
     return this.api.search<Res>(this.buildUrl(parentIds), query);
   }
 
+  public getQueryKey(parentIds: ResourceId[] = [], id?: ResourceId) {
+    const ids = Array.from(parentIds).reverse();
+
+    const key = this.parents
+      .map((endpoint, index) => [endpoint, ids[index]])
+      .flat();
+
+    key.push(this.endpoint);
+
+    if (id) {
+      key.push(id);
+    }
+
+    return key;
+  }
+
   protected buildUrl(parentIds: ResourceId[], id?: ResourceId) {
     let baseUrl = this.buildBaseUrl(parentIds);
 
