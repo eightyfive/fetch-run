@@ -2,6 +2,8 @@ import { IApi } from './types';
 
 export type ResourceId = string | number;
 
+export type ResourceIds = (ResourceId | undefined)[];
+
 export type ResourceData<
   T extends object,
   idAttribute extends string = 'id',
@@ -31,13 +33,13 @@ export class Resource<T extends object, idAttribute extends string = 'id'> {
   // C
   public create<Res = T, Req extends object = ResourceData<T, idAttribute>>(
     data: Req,
-    ...parentIds: ResourceId[]
+    ...parentIds: ResourceIds
   ) {
     return this.api.post<Res, Req>(this.buildUrl(parentIds), data);
   }
 
   // R
-  public read<Res = T>(id: ResourceId, ...parentIds: ResourceId[]) {
+  public read<Res = T>(id: ResourceId, ...parentIds: ResourceIds) {
     return this.api.get<Res>(this.buildUrl(parentIds, id));
   }
 
@@ -45,27 +47,27 @@ export class Resource<T extends object, idAttribute extends string = 'id'> {
   public update<Res = T, Req extends object = ResourceData<T, idAttribute>>(
     id: ResourceId,
     data: Req,
-    ...parentIds: ResourceId[]
+    ...parentIds: ResourceIds
   ) {
     return this.api.put<Res, Req>(this.buildUrl(parentIds, id), data);
   }
 
   // D
-  public delete<Res = void>(id: ResourceId, ...parentIds: ResourceId[]) {
+  public delete<Res = void>(id: ResourceId, ...parentIds: ResourceIds) {
     return this.api.delete<Res>(this.buildUrl(parentIds, id));
   }
 
   // L
-  public list<Res = T[]>(...parentIds: ResourceId[]) {
+  public list<Res = T[]>(...parentIds: ResourceIds) {
     return this.api.get<Res>(this.buildUrl(parentIds));
   }
 
   // Search
-  public search<Res = T[]>(query: object, ...parentIds: ResourceId[]) {
+  public search<Res = T[]>(query: object, ...parentIds: ResourceIds) {
     return this.api.search<Res>(this.buildUrl(parentIds), query);
   }
 
-  public getQueryKey(parentIds: ResourceId[] = [], id?: ResourceId) {
+  public getQueryKey(parentIds: ResourceIds = [], id?: ResourceId) {
     const ids = Array.from(parentIds).reverse();
 
     const key = this.parents
@@ -81,7 +83,7 @@ export class Resource<T extends object, idAttribute extends string = 'id'> {
     return key;
   }
 
-  protected buildUrl(parentIds: ResourceId[], id?: ResourceId) {
+  protected buildUrl(parentIds: ResourceIds, id?: ResourceId) {
     let baseUrl = this.buildBaseUrl(parentIds);
 
     let url = baseUrl ? `${baseUrl}/${this.endpoint}` : this.endpoint;
@@ -93,7 +95,7 @@ export class Resource<T extends object, idAttribute extends string = 'id'> {
     return `${url}/${id}`;
   }
 
-  protected buildBaseUrl(parentIds: ResourceId[]) {
+  protected buildBaseUrl(parentIds: ResourceIds) {
     const ids = Array.from(parentIds).reverse();
 
     return this.parents
