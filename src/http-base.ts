@@ -64,8 +64,12 @@ export class HttpBase {
     return this.stack(req);
   }
 
-  public clone() {
+  public clone(pathname: string = '') {
     // @ts-ignore
-    return new this.constructor(this.baseUrl, { ...this.options }, this.stack);
+    return new this.constructor(
+      pathname ? `${this.baseUrl}/${pathname}` : this.baseUrl,
+      { ...this.options },
+      this.stack,
+    );
   }
 }
