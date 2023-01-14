@@ -9,7 +9,11 @@ export type ResourceData<
   idAttribute extends string = 'id',
 > = Omit<T, idAttribute>;
 
-export class Resource<T extends object, idAttribute extends string = 'id'> {
+export class Resource<
+  T extends object,
+  TItem = T,
+  idAttribute extends string = 'id',
+> {
   protected api: IApi;
   protected parents: string[];
 
@@ -58,7 +62,7 @@ export class Resource<T extends object, idAttribute extends string = 'id'> {
   }
 
   // L
-  public list<Res = T[]>(...parentIds: ResourceIds) {
+  public list<Res = TItem[]>(...parentIds: ResourceIds) {
     return this.api.get<Res>(this.buildUrl(parentIds));
   }
 

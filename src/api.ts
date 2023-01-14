@@ -51,8 +51,8 @@ export class Api extends Http implements IApi {
     return super.search(path, query, options).then((res) => toJSON<Res>(res));
   }
 
-  public resource<T extends object>(endpoint: string) {
-    return new Resource<T>(this, endpoint);
+  public resource<T extends object, TItem = T>(endpoint: string) {
+    return new Resource<T, TItem>(this, endpoint);
   }
 
   public static create(url?: string, options?: RequestInit) {
