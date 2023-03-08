@@ -41,10 +41,10 @@ export class Resource<
   // - Search
 
   // C
-  public create<Res = T, Req extends object = ResourceData<T, idAttribute>>(
-    data: Req,
-    ...parentIds: ResourceIds
-  ) {
+  public create<
+    Res = T,
+    Req extends object | void = ResourceData<T, idAttribute>,
+  >(data: Req, ...parentIds: ResourceIds) {
     return this.api.post<Res, Req>(this.buildUrl(parentIds), data);
   }
 
@@ -54,11 +54,10 @@ export class Resource<
   }
 
   // U
-  public update<Res = T, Req extends object = ResourceData<T, idAttribute>>(
-    id: ResourceId,
-    data: Req,
-    ...parentIds: ResourceIds
-  ) {
+  public update<
+    Res = T,
+    Req extends object | void = ResourceData<T, idAttribute>,
+  >(id: ResourceId, data: Req, ...parentIds: ResourceIds) {
     return this.api.put<Res, Req>(this.buildUrl(parentIds, id), data);
   }
 
