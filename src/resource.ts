@@ -22,7 +22,13 @@ export class Resource<
   constructor(api: IApi, endpoint: string, parents?: string[]) {
     this.api = api;
     this.endpoint = endpoint;
-    this.parents = parents || [];
+    this.parents = parents ?? [];
+  }
+
+  public get id() {
+    return this.parents.length
+      ? `${this.parents.join('/')}/${this.endpoint}`
+      : this.endpoint;
   }
 
   // CRUDLS
