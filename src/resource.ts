@@ -76,6 +76,10 @@ export class Resource<
     return this.api.search<Res>(this.buildUrl(parentIds), query);
   }
 
+  public isEnabled(parentIds: ResourceIds) {
+    return parentIds.length === this.parents.length && parentIds.every(Boolean);
+  }
+
   public getQueryKey(parentIds: ResourceIds = [], id?: ResourceId) {
     const ids = Array.from(parentIds).reverse();
 
