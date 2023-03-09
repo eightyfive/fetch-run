@@ -56,6 +56,6 @@ export class Api extends Http implements IApi {
   }
 
   public static create(url?: string, options?: RequestInit) {
-    return new Api(url || '', merge({}, defaultOptions, options));
+    return new Api(url ?? '', merge({}, defaultOptions, options));
   }
 }

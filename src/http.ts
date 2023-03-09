@@ -60,6 +60,6 @@ export class Http extends HttpBase {
   }
 
   public static create(url?: string, options?: RequestInit) {
-    return new Http(url || '', options);
+    return new Http(url ?? '', options);
   }
 }
