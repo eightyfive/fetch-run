@@ -1,11 +1,32 @@
 import qs from 'query-string';
+import merge from 'lodash.merge';
 
-import { HttpBase } from './http-base';
-import { BodyData, Middleware } from './types';
+import { BodyData, Layer, Method, Middleware } from './types';
 
 const { assign } = Object;
 
-export class Http extends HttpBase {
+const defaultOptions = { headers: {} };
+
+type HttpOptions = RequestInit & {
+  headers: HeadersInit;
+};
+
+export class Http {
+  public baseUrl: string;
+  public options: HttpOptions;
+  protected stack: Layer;
+
+  constructor(baseUrl: string, options?: RequestInit, stack?: Layer) {
+    this.baseUrl = baseUrl;
+    this.options = assign({}, defaultOptions, options);
+
+    if (stack) {
+      this.stack = stack.bind(this);
+    } else {
+      this.stack = (req: Request) => fetch(req);
+    }
+  }
+
   public use(middleware: Middleware) {
     this.stack = middleware(this.stack);
   }
@@ -16,6 +37,41 @@ export class Http extends HttpBase {
 
   public setBearer(token: string) {
     this.setHeader('Authorization', `Bearer ${token}`);
+  }
+
+  protected request(
+    method: Method,
+    path: string,
+    data: BodyData,
+    options?: RequestInit,
+  ) {
+    // Init
+    const init: RequestInit = merge({}, this.options, options, {
+      method,
+    });
+
+    if (data && method !== 'GET') {
+      init.body = data instanceof FormData ? data : JSON.stringify(data);
+    }
+
+    // Request
+    const req = new Request(`${this.baseUrl}/${path}`, init);
+
+    // Response
+    return this.run(req);
+  }
+
+  protected run(req: Request) {
+    return this.stack(req);
+  }
+
+  public clone(pathname: string = '') {
+    // @ts-ignore
+    return new this.constructor(
+      pathname ? `${this.baseUrl}/${pathname}` : this.baseUrl,
+      { ...this.options },
+      this.stack,
+    );
   }
 
   public get(path: string, options?: RequestInit) {
