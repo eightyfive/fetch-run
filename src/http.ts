@@ -11,10 +11,14 @@ type HttpOptions = RequestInit & {
   headers: HeadersInit;
 };
 
+type Listener = (url: string, method: string, status: number) => void;
+
 export class Http {
   public baseUrl: string;
   public options: HttpOptions;
+
   protected stack: Layer;
+  protected listeners: Set<Listener> = new Set();
 
   constructor(baseUrl: string, options?: RequestInit, stack?: Layer) {
     this.baseUrl = baseUrl;
@@ -31,6 +35,15 @@ export class Http {
     this.stack = middleware(this.stack);
   }
 
+  public subscribe(listener: Listener) {
+    this.listeners.add(listener);
+
+    // Unsubscribe
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
   public setHeader(name: string, value: string) {
     assign(this.options.headers, { [name]: value });
   }
@@ -39,7 +52,7 @@ export class Http {
     this.setHeader('Authorization', `Bearer ${token}`);
   }
 
-  protected request(
+  protected async request(
     method: Method,
     path: string,
     data: BodyData,
@@ -58,7 +71,13 @@ export class Http {
     const req = new Request(`${this.baseUrl}/${path}`, init);
 
     // Response
-    return this.run(req);
+    const res = await this.run(req);
+
+    this.listeners.forEach((listener) => {
+      listener(res.url, req.method, res.status);
+    });
+
+    return res;
   }
 
   protected run(req: Request) {
