@@ -36,8 +36,10 @@ beforeEach(() => {
   api = Api.create('http://example.org');
 
   user = api.resource<User>('users');
-  userPost = user.resource<Post>('posts');
-  userPostComment = userPost.resource<Post>('comments');
+  userPost = api.resource<Post>('users/:id/posts');
+  userPostComment = api.resource<Comment>(
+    'users/:userId/posts/:postId/comments',
+  );
 });
 
 describe('Resource', () => {
@@ -114,7 +116,7 @@ describe('Resource', () => {
     // @ts-ignore
     const spy = jest.spyOn(user.api, 'request');
 
-    userPost.create(data, 1);
+    userPost.create(data, { id: 1 });
 
     expect(spy).toHaveBeenCalledWith('POST', 'users/1/posts', data, undefined);
   });
@@ -123,7 +125,7 @@ describe('Resource', () => {
     // @ts-ignore
     const spy = jest.spyOn(user.api, 'request');
 
-    userPost.read(id, 1);
+    userPost.read(id, { id: 1 });
 
     expect(spy).toHaveBeenCalledWith(
       'GET',
@@ -137,7 +139,7 @@ describe('Resource', () => {
     // @ts-ignore
     const spy = jest.spyOn(user.api, 'request');
 
-    userPost.update(id, data, 1);
+    userPost.update(id, data, { id: 1 });
 
     expect(spy).toHaveBeenCalledWith(
       'PUT',
@@ -151,7 +153,7 @@ describe('Resource', () => {
     // @ts-ignore
     const spy = jest.spyOn(user.api, 'request');
 
-    userPost.delete(id, 1);
+    userPost.delete(id, { id: 1 });
 
     expect(spy).toHaveBeenCalledWith(
       'DELETE',
@@ -165,7 +167,7 @@ describe('Resource', () => {
     // @ts-ignore
     const spy = jest.spyOn(user.api, 'request');
 
-    userPost.list(1);
+    userPost.list({ id: 1 });
 
     expect(spy).toHaveBeenCalledWith(
       'GET',
@@ -179,7 +181,7 @@ describe('Resource', () => {
     // @ts-ignore
     const spy = jest.spyOn(user.api, 'request');
 
-    userPost.search(params, 1);
+    userPost.search(params, { id: 1 });
 
     expect(spy).toHaveBeenCalledWith(
       'GET',
@@ -193,60 +195,13 @@ describe('Resource', () => {
     // @ts-ignore
     const spy = jest.spyOn(user.api, 'request');
 
-    userPostComment.read(id, 2, 1);
+    userPostComment.read(id, { userId: 1, postId: 2 });
 
     expect(spy).toHaveBeenCalledWith(
       'GET',
       `users/1/posts/2/comments/${id}`,
       undefined,
       undefined,
-    );
-  });
-
-  it('build query key', () => {
-    const USER_ID = 1;
-    const POST_ID = 2;
-    const COMMENT_ID = 3;
-
-    expect(user.getQueryKey()).toEqual(['users']);
-    expect(user.getQueryKey([], USER_ID)).toEqual(['users', USER_ID]);
-
-    expect(userPost.getQueryKey()).toEqual(['users', undefined, 'posts']);
-    expect(userPost.getQueryKey([USER_ID])).toEqual([
-      'users',
-      USER_ID,
-      'posts',
-    ]);
-    expect(userPost.getQueryKey([USER_ID], POST_ID)).toEqual([
-      'users',
-      USER_ID,
-      'posts',
-      POST_ID,
-    ]);
-
-    expect(userPostComment.getQueryKey()).toEqual([
-      'users',
-      undefined,
-      'posts',
-      undefined,
-      'comments',
-    ]);
-    expect(userPostComment.getQueryKey([USER_ID])).toEqual([
-      'users',
-      USER_ID,
-      'posts',
-      undefined,
-      'comments',
-    ]);
-    expect(userPostComment.getQueryKey([POST_ID, USER_ID])).toEqual([
-      'users',
-      USER_ID,
-      'posts',
-      POST_ID,
-      'comments',
-    ]);
-    expect(userPostComment.getQueryKey([POST_ID, USER_ID], COMMENT_ID)).toEqual(
-      ['users', USER_ID, 'posts', POST_ID, 'comments', COMMENT_ID],
     );
   });
 });

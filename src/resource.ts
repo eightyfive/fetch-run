@@ -1,13 +1,5 @@
-import { IApi } from './types';
-
-export type ResourceId = string | number;
-
-export type ResourceIds = (ResourceId | undefined)[];
-
-export type ResourceData<
-  T extends object,
-  idAttribute extends string = 'id',
-> = Omit<T, idAttribute>;
+import { IApi, ResourceData, ResourceId, ResourceParams } from './types';
+import { parseParams, replaceParams } from './utils';
 
 export class Resource<
   T extends object,
@@ -15,20 +7,14 @@ export class Resource<
   idAttribute extends string = 'id',
 > {
   protected api: IApi;
-  protected parents: string[];
 
-  public endpoint: string;
+  public path: string;
+  public params: string[];
 
-  constructor(api: IApi, endpoint: string, parents?: string[]) {
+  constructor(api: IApi, path: string) {
     this.api = api;
-    this.endpoint = endpoint;
-    this.parents = parents ?? [];
-  }
-
-  public get id() {
-    return this.parents.length
-      ? `${this.parents.join('/')}/${this.endpoint}`
-      : this.endpoint;
+    this.path = path;
+    this.params = parseParams(path);
   }
 
   // CRUDLS
@@ -44,82 +30,61 @@ export class Resource<
   public create<
     Res = T,
     Req extends object | void = ResourceData<T, idAttribute>,
-  >(data: Req, ...parentIds: ResourceIds) {
-    return this.api.post<Res, Req>(this.buildUrl(parentIds), data);
+  >(data: Req, params?: ResourceParams) {
+    return this.api.post<Res, Req>(this.buildUrl(params), data);
   }
 
   // R
-  public read<Res = T>(id: ResourceId, ...parentIds: ResourceIds) {
-    return this.api.get<Res>(this.buildUrl(parentIds, id));
+  public read<Res = T>(id: ResourceId, params?: ResourceParams) {
+    return this.api.get<Res>(this.buildUrl(params, id));
   }
 
   // U
   public update<
     Res = T,
     Req extends object | void = ResourceData<T, idAttribute>,
-  >(id: ResourceId, data: Req, ...parentIds: ResourceIds) {
-    return this.api.put<Res, Req>(this.buildUrl(parentIds, id), data);
+  >(id: ResourceId, data: Req, params?: ResourceParams) {
+    return this.api.put<Res, Req>(this.buildUrl(params, id), data);
   }
 
   // D
-  public delete<Res = void>(id: ResourceId, ...parentIds: ResourceIds) {
-    return this.api.delete<Res>(this.buildUrl(parentIds, id));
+  public delete<Res = void>(id: ResourceId, params?: ResourceParams) {
+    return this.api.delete<Res>(this.buildUrl(params, id));
   }
 
   // L
-  public list<Res = TItem[]>(...parentIds: ResourceIds) {
-    return this.api.get<Res>(this.buildUrl(parentIds));
+  public list<Res = TItem[]>(params?: ResourceParams) {
+    return this.api.get<Res>(this.buildUrl(params));
   }
 
   // Search
-  public search<Res = T[]>(query: object, ...parentIds: ResourceIds) {
-    return this.api.search<Res>(this.buildUrl(parentIds), query);
+  public search<Res = T[]>(query: object, params?: ResourceParams) {
+    return this.api.search<Res>(this.buildUrl(params), query);
   }
 
-  public isEnabled(parentIds: ResourceIds) {
-    return parentIds.length === this.parents.length && parentIds.every(Boolean);
+  public isEnabled(params: ResourceParams) {
+    return Object.values(params).filter(Boolean).length > 0;
   }
 
-  public getQueryKey(parentIds: ResourceIds = [], id?: ResourceId) {
-    const ids = Array.from(parentIds).reverse();
+  protected buildUrl(params?: ResourceParams, id?: ResourceId) {
+    const _params = Object.keys(params ?? []).filter((param) =>
+      this.params.includes(param),
+    );
 
-    const key = this.parents
-      .map((endpoint, index) => [endpoint, ids[index]])
-      .flat();
-
-    key.push(this.endpoint);
-
-    if (id) {
-      key.push(id);
+    if (_params.length !== this.params.length) {
+      throw new Error(
+        `Missing params "${this.path}": [${this.params
+          .filter((param) => !_params.includes(param))
+          .join(',')}]`,
+      );
     }
 
-    return key;
-  }
-
-  protected buildUrl(parentIds: ResourceIds, id?: ResourceId) {
-    let baseUrl = this.buildBaseUrl(parentIds);
-
-    let url = baseUrl ? `${baseUrl}/${this.endpoint}` : this.endpoint;
+    const baseUrl = params ? replaceParams(this.path, params) : this.path;
 
     if (!id) {
-      return url;
+      return baseUrl;
     }
 
-    return `${url}/${id}`;
-  }
-
-  protected buildBaseUrl(parentIds: ResourceIds) {
-    const ids = Array.from(parentIds).reverse();
-
-    return this.parents
-      .map((endpoint, index) => `${endpoint}/${ids[index]}`)
-      .join('/');
-  }
-
-  public resource<R extends object>(endpoint: string) {
-    return new Resource<R>(this.api, endpoint, [
-      ...this.parents,
-      this.endpoint,
-    ]);
+    return `${baseUrl}/${id}`;
   }
 }

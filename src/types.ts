@@ -31,3 +31,12 @@ export interface IApi {
 
   search<Res>(path: string, query: object, options?: RequestInit): Promise<Res>;
 }
+
+export type ResourceId = string | number;
+
+export type ResourceParams = Record<string, ResourceId>;
+
+export type ResourceData<
+  T extends object,
+  idAttribute extends string = 'id',
+> = Omit<T, idAttribute>;
