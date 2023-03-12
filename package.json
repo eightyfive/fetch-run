@@ -1,6 +1,6 @@
 {
   "name": "fetch-run",
-  "version": "2.7.1",
+  "version": "2.7.2",
   "description": "Fetch middleware for the modern minimalist",
   "scripts": {
     "build": "rm -rf dist && tsc --project .",
