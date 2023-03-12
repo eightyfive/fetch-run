@@ -13,10 +13,25 @@ export function toJSON<T>(res: Response) {
 }
 
 export function parseParams(path: string) {
-  return path
+  const [uri, search] = path.split('?');
+
+  const paramNames = uri
     .split('/')
     .filter((segment) => segment.startsWith(':'))
     .map((param) => param.substring(1));
+
+  if (search) {
+    paramNames.push(
+      ...search
+        .split('&')
+        .map((param) => param.split('='))
+        .flat()
+        .filter((param) => param.startsWith(':'))
+        .map((param) => param.substring(1)),
+    );
+  }
+
+  return paramNames;
 }
 
 export function replaceParams(path: string, params: ResourceParams) {

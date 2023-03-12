@@ -9,12 +9,61 @@ export class Resource<
   protected api: IApi;
 
   public path: string;
-  public params: string[];
+  public paramNames: string[];
 
   constructor(api: IApi, path: string) {
     this.api = api;
+
     this.path = path;
-    this.params = parseParams(path);
+    this.paramNames = parseParams(path);
+
+    if (this.paramNames.some((name) => name === 'id')) {
+      throw new Error('":id" is a reserved param name');
+    }
+  }
+
+  public match(pathname: string) {
+    return (
+      this.matchPath(pathname, `${this.path}/:id`) ||
+      this.matchPath(pathname, this.path)
+    );
+  }
+
+  protected matchPath(pathname: string, path: string) {
+    const urlSegments = pathname.substring(1).split('/');
+
+    const pathSegments = path.split('/');
+
+    if (urlSegments.length === pathSegments.length) {
+      let index = 0;
+      let paramIndex = 0;
+
+      const params: Record<string, string> = {};
+
+      for (const urlSegment of urlSegments) {
+        const pathSegment = pathSegments[index];
+
+        if (pathSegment.startsWith(':')) {
+          const paramName = this.paramNames[paramIndex] ?? 'id';
+
+          if (!paramName) {
+            return null;
+          }
+
+          paramIndex++;
+
+          params[paramName] = urlSegment;
+        } else if (urlSegment !== pathSegment) {
+          return null;
+        }
+
+        index++;
+      }
+
+      return params;
+    }
+
+    return null;
   }
 
   // CRUDLS
@@ -62,19 +111,15 @@ export class Resource<
     return this.api.search<Res>(this.buildUrl(params), query);
   }
 
-  public isEnabled(params: ResourceParams) {
-    return Object.values(params).filter(Boolean).length > 0;
-  }
-
   protected buildUrl(params?: ResourceParams, id?: ResourceId) {
-    const _params = Object.keys(params ?? []).filter((param) =>
-      this.params.includes(param),
+    const paramNames = Object.keys(params ?? []).filter((param) =>
+      this.paramNames.includes(param),
     );
 
-    if (_params.length !== this.params.length) {
+    if (paramNames.length !== this.paramNames.length) {
       throw new Error(
-        `Missing params "${this.path}": [${this.params
-          .filter((param) => !_params.includes(param))
+        `Missing params "${this.path}": [${this.paramNames
+          .filter((name) => !paramNames.includes(name))
           .join(',')}]`,
       );
     }

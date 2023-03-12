@@ -36,7 +36,7 @@ beforeEach(() => {
   api = Api.create('http://example.org');
 
   user = api.resource<User>('users');
-  userPost = api.resource<Post>('users/:id/posts');
+  userPost = api.resource<Post>('users/:userId/posts');
   userPostComment = api.resource<Comment>(
     'users/:userId/posts/:postId/comments',
   );
@@ -116,7 +116,7 @@ describe('Resource', () => {
     // @ts-ignore
     const spy = jest.spyOn(user.api, 'request');
 
-    userPost.create(data, { id: 1 });
+    userPost.create(data, { userId: 1 });
 
     expect(spy).toHaveBeenCalledWith('POST', 'users/1/posts', data, undefined);
   });
@@ -125,7 +125,7 @@ describe('Resource', () => {
     // @ts-ignore
     const spy = jest.spyOn(user.api, 'request');
 
-    userPost.read(id, { id: 1 });
+    userPost.read(id, { userId: 1 });
 
     expect(spy).toHaveBeenCalledWith(
       'GET',
@@ -139,7 +139,7 @@ describe('Resource', () => {
     // @ts-ignore
     const spy = jest.spyOn(user.api, 'request');
 
-    userPost.update(id, data, { id: 1 });
+    userPost.update(id, data, { userId: 1 });
 
     expect(spy).toHaveBeenCalledWith(
       'PUT',
@@ -153,7 +153,7 @@ describe('Resource', () => {
     // @ts-ignore
     const spy = jest.spyOn(user.api, 'request');
 
-    userPost.delete(id, { id: 1 });
+    userPost.delete(id, { userId: 1 });
 
     expect(spy).toHaveBeenCalledWith(
       'DELETE',
@@ -167,7 +167,7 @@ describe('Resource', () => {
     // @ts-ignore
     const spy = jest.spyOn(user.api, 'request');
 
-    userPost.list({ id: 1 });
+    userPost.list({ userId: 1 });
 
     expect(spy).toHaveBeenCalledWith(
       'GET',
@@ -181,7 +181,7 @@ describe('Resource', () => {
     // @ts-ignore
     const spy = jest.spyOn(user.api, 'request');
 
-    userPost.search(params, { id: 1 });
+    userPost.search(params, { userId: 1 });
 
     expect(spy).toHaveBeenCalledWith(
       'GET',
@@ -203,5 +203,35 @@ describe('Resource', () => {
       undefined,
       undefined,
     );
+  });
+
+  it('match', () => {
+    expect(user.match('/users')).toEqual({});
+    expect(user.match('/users/123')).toEqual({ id: '123' });
+
+    expect(user.match('users')).toEqual(null);
+    expect(user.match('/users/123/posts')).toEqual(null);
+    expect(user.match('/users/bob/')).toEqual(null);
+    expect(user.match('/venues/123')).toEqual(null);
+    expect(user.match('/akdkheh')).toEqual(null);
+
+    expect(userPost.match('/users/alice/posts')).toEqual({ userId: 'alice' });
+    expect(userPost.match('/users/123/posts/456')).toEqual({
+      userId: '123',
+      id: '456',
+    });
+    expect(userPost.match('/users/posts/456')).toEqual(null);
+
+    expect(userPostComment.match('/users/123/posts/title-ai/comments')).toEqual(
+      {
+        userId: '123',
+        postId: 'title-ai',
+      },
+    );
+    expect(userPostComment.match('/users/joe/posts/456/comments/789')).toEqual({
+      userId: 'joe',
+      postId: '456',
+      id: '789',
+    });
   });
 });

@@ -9,6 +9,9 @@ describe('utils', () => {
       'userId',
       'postId',
     ]);
+
+    expect(parseParams('posts?author=:author')).toEqual(['author']);
+    expect(parseParams('posts/:id?user=:userName')).toEqual(['id', 'userName']);
   });
 
   it('replaceParams', () => {
