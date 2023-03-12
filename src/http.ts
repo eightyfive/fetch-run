@@ -11,14 +11,17 @@ type HttpOptions = RequestInit & {
   headers: HeadersInit;
 };
 
-type Listener = (url: string, method: string, status: number) => void;
+type ErrorHandler = (err: unknown) => void;
+
+type Listener = (req: Request, res: Response) => void;
 
 export class Http {
   public baseUrl: string;
   public options: HttpOptions;
 
-  protected stack: Layer;
+  protected errorHandlers: Set<ErrorHandler> = new Set();
   protected listeners: Set<Listener> = new Set();
+  protected stack: Layer;
 
   constructor(baseUrl: string, options?: RequestInit, stack?: Layer) {
     this.baseUrl = baseUrl;
@@ -41,6 +44,15 @@ export class Http {
     // Unsubscribe
     return () => {
       this.listeners.delete(listener);
+    };
+  }
+
+  public onError(handler: ErrorHandler) {
+    this.errorHandlers.add(handler);
+
+    // Unsubscribe
+    return () => {
+      this.errorHandlers.delete(handler);
     };
   }
 
@@ -71,13 +83,29 @@ export class Http {
     const req = new Request(`${this.baseUrl}/${path}`, init);
 
     // Response
-    const res = await this.run(req);
+    try {
+      const res = await this.run(req);
 
+      this.emit(req, res.clone());
+
+      return res;
+    } catch (err) {
+      this.emitError(err);
+
+      throw err;
+    }
+  }
+
+  protected emit(req: Request, res: Response) {
     this.listeners.forEach((listener) => {
-      listener(res.url, req.method, res.status);
+      listener(req, res);
     });
+  }
 
-    return res;
+  protected emitError(err: unknown) {
+    this.errorHandlers.forEach((handler) => {
+      handler(err);
+    });
   }
 
   protected run(req: Request) {
