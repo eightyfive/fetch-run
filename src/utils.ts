@@ -12,30 +12,15 @@ export function toJSON<T>(res: Response) {
   return data as Promise<T>;
 }
 
-export function parseParams(path: string) {
-  const [uri, search] = path.split('?');
-
-  const paramNames = uri
+export function parseParams(route: string) {
+  return route
     .split('/')
     .filter((segment) => segment.startsWith(':'))
     .map((param) => param.substring(1));
-
-  if (search) {
-    paramNames.push(
-      ...search
-        .split('&')
-        .map((param) => param.split('='))
-        .flat()
-        .filter((param) => param.startsWith(':'))
-        .map((param) => param.substring(1)),
-    );
-  }
-
-  return paramNames;
 }
 
-export function replaceParams(path: string, params: ResourceParams) {
-  let url = path;
+export function replaceParams(route: string, params: ResourceParams) {
+  let url = route;
 
   for (const [name, value] of Object.entries(params)) {
     const paramName = `:${name}`;

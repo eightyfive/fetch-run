@@ -8,14 +8,14 @@ export class Resource<
 > {
   protected api: IApi;
 
-  public path: string;
+  public route: string;
   public paramNames: string[];
 
-  constructor(api: IApi, path: string) {
+  constructor(api: IApi, route: string) {
     this.api = api;
 
-    this.path = path;
-    this.paramNames = parseParams(path);
+    this.route = route;
+    this.paramNames = parseParams(route);
 
     if (this.paramNames.some((name) => name === 'id')) {
       throw new Error('":id" is a reserved param name');
@@ -24,15 +24,15 @@ export class Resource<
 
   public match(pathname: string) {
     return (
-      this.matchPath(pathname, `${this.path}/:id`) ||
-      this.matchPath(pathname, this.path)
+      this.matchRoute(`${this.route}/:id`, pathname) ||
+      this.matchRoute(this.route, pathname)
     );
   }
 
-  protected matchPath(pathname: string, path: string) {
+  protected matchRoute(route: string, pathname: string) {
     const urlSegments = pathname.substring(1).split('/');
 
-    const pathSegments = path.split('/');
+    const pathSegments = route.split('/');
 
     if (urlSegments.length === pathSegments.length) {
       let index = 0;
@@ -118,13 +118,13 @@ export class Resource<
 
     if (paramNames.length !== this.paramNames.length) {
       throw new Error(
-        `Missing params "${this.path}": [${this.paramNames
+        `Missing params "${this.route}": [${this.paramNames
           .filter((name) => !paramNames.includes(name))
           .join(',')}]`,
       );
     }
 
-    const baseUrl = params ? replaceParams(this.path, params) : this.path;
+    const baseUrl = params ? replaceParams(this.route, params) : this.route;
 
     if (!id) {
       return baseUrl;
