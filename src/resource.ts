@@ -1,6 +1,8 @@
 import { IApi, ResourceData, ResourceId, ResourceParams } from './types';
 import { parseParams, replaceParams } from './utils';
 
+type EventHandler<T> = (data?: T | void) => void;
+
 export class Resource<
   T extends object,
   TItem = T,
@@ -11,6 +13,10 @@ export class Resource<
   public route: string;
   public paramNames: string[];
 
+  protected createdHandlers: Set<EventHandler<T>> = new Set();
+  protected updatedHandlers: Set<EventHandler<T>> = new Set();
+  protected deletedHandlers: Set<EventHandler<T>> = new Set();
+
   constructor(api: IApi, route: string) {
     this.api = api;
 
@@ -20,6 +26,51 @@ export class Resource<
     if (this.paramNames.some((name) => name === 'id')) {
       throw new Error('":id" is a reserved param name');
     }
+  }
+
+  public onCreated(handler: EventHandler<T>) {
+    this.createdHandlers.add(handler);
+
+    // Unsubscribe
+    return () => {
+      this.createdHandlers.delete(handler);
+    };
+  }
+
+  public created(data?: T | void) {
+    this.createdHandlers.forEach((handler) => {
+      handler(data);
+    });
+  }
+
+  public onUpdated(handler: EventHandler<T>) {
+    this.updatedHandlers.add(handler);
+
+    // Unsubscribe
+    return () => {
+      this.updatedHandlers.delete(handler);
+    };
+  }
+
+  public updated(data?: T | void) {
+    this.updatedHandlers.forEach((handler) => {
+      handler(data);
+    });
+  }
+
+  public onDeleted(handler: EventHandler<T>) {
+    this.deletedHandlers.add(handler);
+
+    // Unsubscribe
+    return () => {
+      this.deletedHandlers.delete(handler);
+    };
+  }
+
+  public deleted(data?: T | void) {
+    this.deletedHandlers.forEach((handler) => {
+      handler(data);
+    });
   }
 
   public match(pathname: string) {
@@ -77,10 +128,14 @@ export class Resource<
 
   // C
   public create<
-    Res = T,
+    Res extends T | void = T,
     Req extends object | void = ResourceData<T, idAttribute>,
-  >(data: Req, params?: ResourceParams) {
-    return this.api.post<Res, Req>(this.buildUrl(params), data);
+  >(req: Req, params?: ResourceParams) {
+    return this.api.post<Res, Req>(this.buildUrl(params), req).then((data) => {
+      this.created(data);
+
+      return data;
+    });
   }
 
   // R
@@ -90,15 +145,28 @@ export class Resource<
 
   // U
   public update<
-    Res = T,
+    Res extends T | void = T,
     Req extends object | void = ResourceData<T, idAttribute>,
-  >(id: ResourceId, data: Req, params?: ResourceParams) {
-    return this.api.put<Res, Req>(this.buildUrl(params, id), data);
+  >(id: ResourceId, req: Req, params?: ResourceParams) {
+    return this.api
+      .put<Res, Req>(this.buildUrl(params, id), req)
+      .then((data) => {
+        this.updated(data);
+
+        return data;
+      });
   }
 
   // D
-  public delete<Res = void>(id: ResourceId, params?: ResourceParams) {
-    return this.api.delete<Res>(this.buildUrl(params, id));
+  public delete<Res extends T | void = void>(
+    id: ResourceId,
+    params?: ResourceParams,
+  ) {
+    return this.api.delete<Res>(this.buildUrl(params, id)).then((data) => {
+      this.deleted(data);
+
+      return data;
+    });
   }
 
   // L
