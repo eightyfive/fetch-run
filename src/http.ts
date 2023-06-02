@@ -90,7 +90,7 @@ export class Http {
 
       return res;
     } catch (err) {
-      this.emitError(err);
+      this.handleError(err);
 
       throw err;
     }
@@ -102,7 +102,7 @@ export class Http {
     });
   }
 
-  protected emitError(err: unknown) {
+  protected handleError(err: unknown) {
     this.errorHandlers.forEach((handler) => {
       handler(err);
     });
