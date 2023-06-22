@@ -131,7 +131,7 @@ export class Resource<
     Res extends T | void = T,
     Req extends object | void = ResourceData<T, idAttribute>,
   >(req: Req, params?: ResourceParams) {
-    return this.api.post<Res, Req>(this.buildUrl(params), req).then((data) => {
+    return this.api.post<Res, Req>(this.buildPath(params), req).then((data) => {
       this.created(data);
 
       return data;
@@ -140,7 +140,7 @@ export class Resource<
 
   // R
   public read<Res = T>(id: ResourceId, params?: ResourceParams) {
-    return this.api.get<Res>(this.buildUrl(params, id));
+    return this.api.get<Res>(this.buildPath(params, id));
   }
 
   // U
@@ -149,7 +149,7 @@ export class Resource<
     Req extends object | void = ResourceData<T, idAttribute>,
   >(id: ResourceId, req: Req, params?: ResourceParams) {
     return this.api
-      .put<Res, Req>(this.buildUrl(params, id), req)
+      .put<Res, Req>(this.buildPath(params, id), req)
       .then((data) => {
         this.updated(data);
 
@@ -162,7 +162,7 @@ export class Resource<
     id: ResourceId,
     params?: ResourceParams,
   ) {
-    return this.api.delete<Res>(this.buildUrl(params, id)).then((data) => {
+    return this.api.delete<Res>(this.buildPath(params, id)).then((data) => {
       this.deleted(data);
 
       return data;
@@ -171,15 +171,15 @@ export class Resource<
 
   // L
   public list<Res = TItem[]>(params?: ResourceParams) {
-    return this.api.get<Res>(this.buildUrl(params));
+    return this.api.get<Res>(this.buildPath(params));
   }
 
   // Search
   public search<Res = T[]>(query: object, params?: ResourceParams) {
-    return this.api.search<Res>(this.buildUrl(params), query);
+    return this.api.search<Res>(this.buildPath(params), query);
   }
 
-  protected buildUrl(params?: ResourceParams, id?: ResourceId) {
+  public buildPath(params?: ResourceParams, id?: ResourceId) {
     const paramNames = Object.keys(params ?? []).filter((param) =>
       this.paramNames.includes(param),
     );
@@ -192,12 +192,12 @@ export class Resource<
       );
     }
 
-    const baseUrl = params ? replaceParams(this.route, params) : this.route;
+    const path = params ? replaceParams(this.route, params) : this.route;
 
     if (!id) {
-      return baseUrl;
+      return path;
     }
 
-    return `${baseUrl}/${id}`;
+    return `${path}/${id}`;
   }
 }
