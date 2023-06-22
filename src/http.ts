@@ -1,14 +1,9 @@
 import qs from 'query-string';
-import merge from 'lodash.merge';
 
 import { BodyData, Layer, Method, Middleware } from './types';
 
-const { assign } = Object;
-
-const defaultOptions = { headers: {} };
-
-type HttpOptions = RequestInit & {
-  headers: HeadersInit;
+type HttpOptions = Omit<RequestInit, 'headers'> & {
+  headers: Headers;
 };
 
 type ErrorHandler = (err: unknown) => void;
@@ -16,8 +11,8 @@ type ErrorHandler = (err: unknown) => void;
 type Listener = (req: Request, res: Response) => void;
 
 export class Http {
-  public baseUrl: string;
-  public options: HttpOptions;
+  public readonly baseUrl: string;
+  public readonly options: HttpOptions;
 
   protected errorHandlers: Set<ErrorHandler> = new Set();
   protected listeners: Set<Listener> = new Set();
@@ -25,7 +20,10 @@ export class Http {
 
   constructor(baseUrl: string, options?: RequestInit, stack?: Layer) {
     this.baseUrl = baseUrl;
-    this.options = assign({}, defaultOptions, options);
+
+    this.options = Object.assign({}, options, {
+      headers: new Headers(options?.headers),
+    });
 
     if (stack) {
       this.stack = stack.bind(this);
@@ -57,11 +55,21 @@ export class Http {
   }
 
   public setHeader(name: string, value: string) {
-    assign(this.options.headers, { [name]: value });
+    this.options.headers.set(name, value);
   }
 
   public setBearer(token: string) {
     this.setHeader('Authorization', `Bearer ${token}`);
+  }
+
+  protected createHeaders(init?: HeadersInit) {
+    const headers = new Headers(this.options.headers);
+
+    Object.entries(init ?? {}).forEach(([name, value]) => {
+      headers.set(name, value);
+    });
+
+    return headers;
   }
 
   protected async request(
@@ -71,12 +79,18 @@ export class Http {
     options?: RequestInit,
   ) {
     // Init
-    const init: RequestInit = merge({}, this.options, options, {
+    const init: HttpOptions = Object.assign({}, this.options, options, {
+      headers: this.createHeaders(options?.headers),
       method,
     });
 
     if (data && method !== 'GET') {
-      init.body = data instanceof FormData ? data : JSON.stringify(data);
+      if (data instanceof FormData) {
+        init.body = data;
+        init.headers.set('Content-Type', 'multipart/form-data');
+      } else {
+        init.body = JSON.stringify(data, null, 2);
+      }
     }
 
     // Request
