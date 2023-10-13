@@ -87,7 +87,7 @@ export class Http {
     if (data && method !== 'GET') {
       if (data instanceof FormData) {
         init.body = data;
-        init.headers.set('Content-Type', 'multipart/form-data');
+        init.headers.delete('Content-Type');
       } else {
         init.body = JSON.stringify(data, null, 2);
       }
