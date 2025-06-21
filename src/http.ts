@@ -6,52 +6,24 @@ type HttpOptions = Omit<RequestInit, 'headers'> & {
   headers: Headers;
 };
 
-type ErrorHandler = (err: unknown) => void;
-
-type Listener = (req: Request, res: Response) => void;
-
 export class Http {
   public readonly baseUrl: string;
   public readonly options: HttpOptions;
 
-  protected errorHandlers: Set<ErrorHandler> = new Set();
-  protected listeners: Set<Listener> = new Set();
   protected stack: Layer;
 
-  constructor(baseUrl: string, options?: RequestInit, stack?: Layer) {
+  constructor(baseUrl: string, options?: RequestInit) {
     this.baseUrl = baseUrl;
 
     this.options = Object.assign({}, options, {
       headers: new Headers(options?.headers),
     });
 
-    if (stack) {
-      this.stack = stack.bind(this);
-    } else {
-      this.stack = (req: Request) => fetch(req);
-    }
+    this.stack = (req: Request) => fetch(req);
   }
 
   public use(middleware: Middleware) {
     this.stack = middleware(this.stack);
-  }
-
-  public subscribe(listener: Listener) {
-    this.listeners.add(listener);
-
-    // Unsubscribe
-    return () => {
-      this.listeners.delete(listener);
-    };
-  }
-
-  public onError(handler: ErrorHandler) {
-    this.errorHandlers.add(handler);
-
-    // Unsubscribe
-    return () => {
-      this.errorHandlers.delete(handler);
-    };
   }
 
   public setHeader(name: string, value: string) {
@@ -97,42 +69,11 @@ export class Http {
     const req = new Request(`${this.baseUrl}/${path}`, init);
 
     // Response
-    try {
-      const res = await this.run(req);
-
-      this.emit(req, res.clone());
-
-      return res;
-    } catch (err) {
-      this.handleError(err);
-
-      throw err;
-    }
-  }
-
-  protected emit(req: Request, res: Response) {
-    this.listeners.forEach((listener) => {
-      listener(req, res);
-    });
-  }
-
-  protected handleError(err: unknown) {
-    this.errorHandlers.forEach((handler) => {
-      handler(err);
-    });
+    return this.run(req);
   }
 
   protected run(req: Request) {
     return this.stack(req);
-  }
-
-  public clone(pathname: string = '') {
-    // @ts-ignore
-    return new this.constructor(
-      pathname ? `${this.baseUrl}/${pathname}` : this.baseUrl,
-      { ...this.options },
-      this.stack,
-    );
   }
 
   public get(path: string, options?: RequestInit) {
@@ -176,7 +117,7 @@ export class Http {
     );
   }
 
-  public static create(url?: string, options?: RequestInit) {
-    return new Http(url ?? '', options);
+  public static create(url: string, options?: RequestInit) {
+    return new Http(url, options);
   }
 }
