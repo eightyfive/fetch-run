@@ -34,9 +34,9 @@ export interface IApi {
 
 export type ResourceId = string | number;
 
-export type ResourceParams = Record<string, ResourceId>;
-
 export type ResourceData<
   T extends object,
   idAttribute extends string = 'id',
 > = Omit<T, idAttribute>;
+
+export type RouteParams = Record<string, ResourceId>;
