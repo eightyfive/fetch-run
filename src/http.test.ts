@@ -88,16 +88,4 @@ describe('Http', () => {
       done();
     });
   });
-
-  it('clones', () => {
-    const copy = api.clone();
-
-    expect(copy === api).toBe(false);
-    expect(copy.baseUrl).toBe(api.baseUrl);
-    expect(copy.options).toEqual(api.options);
-    expect(copy.options === api.options).toBe(false);
-
-    // @ts-ignore
-    expect(copy.stack === api.stack).toBe(false);
-  });
 });

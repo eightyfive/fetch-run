@@ -35,9 +35,9 @@ beforeEach(() => {
 
   api = Api.create('http://example.org');
 
-  user = api.resource<User>('users');
-  userPost = api.resource<Post>('users/:userId/posts');
-  userPostComment = api.resource<Comment>(
+  user = api.createResource<User>('users');
+  userPost = api.createResource<Post>('users/:userId/posts');
+  userPostComment = api.createResource<Comment>(
     'users/:userId/posts/:postId/comments',
   );
 });
@@ -203,35 +203,5 @@ describe('Resource', () => {
       undefined,
       undefined,
     );
-  });
-
-  it('match', () => {
-    expect(user.match('/users')).toEqual({});
-    expect(user.match('/users/123')).toEqual({ id: '123' });
-
-    expect(user.match('users')).toEqual(null);
-    expect(user.match('/users/123/posts')).toEqual(null);
-    expect(user.match('/users/bob/')).toEqual(null);
-    expect(user.match('/venues/123')).toEqual(null);
-    expect(user.match('/akdkheh')).toEqual(null);
-
-    expect(userPost.match('/users/alice/posts')).toEqual({ userId: 'alice' });
-    expect(userPost.match('/users/123/posts/456')).toEqual({
-      userId: '123',
-      id: '456',
-    });
-    expect(userPost.match('/users/posts/456')).toEqual(null);
-
-    expect(userPostComment.match('/users/123/posts/title-ai/comments')).toEqual(
-      {
-        userId: '123',
-        postId: 'title-ai',
-      },
-    );
-    expect(userPostComment.match('/users/joe/posts/456/comments/789')).toEqual({
-      userId: 'joe',
-      postId: '456',
-      id: '789',
-    });
   });
 });
