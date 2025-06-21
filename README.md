@@ -276,44 +276,38 @@ try {
 }
 ```
 
-#### Note (order of execution)
+#### Note 1 (order of execution)
 
 All middlewares registered _after_ the `error` middleware, will not be executed (`error` middleware throws).
 
 This is why, for example, you need to register the `logger` middleware first, so it can log `req` & `res` before the error is thrown.
 
-### HTTP Error (Metro bundler)
+#### Note 2 (Metro bundler)
 
-The Metro bundler (React Native) fails with `ENOENT` error when throwing a [custom `Error`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error#custom_error_types):
+The Metro bundler (React Native) fails with `ENOENT` error when using `instanceof` on a [custom `Error`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error#custom_error_types):
 
 ```
 Error: ENOENT: no such file or directory, open '<app-root>/HTTPError@http:/127.0.0.1:19000/node_modules/expo/AppEntry.bundle?platform=ios&dev=true&hot=false'
 ```
 
-This is why we need to throw a "normal" `Error` and unfortunately not the custom `HTTPError` itself (yet?).
-
-This prevents the use of `instanceof HTTPError` + requires to [assert the type](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-assertions) when using Typescript:
+So in a React Native project, DO NOT do:
 
 ```ts
 import { HTTPError } from 'fetch-run';
 
-try {
-  // ...
-} catch (err: Error) {
-  // if (err instanceof HTTPError) // Cannot...
-  if (err.name === 'HTTPError') {
-    // Assert type...
-    (err as HTTPError).response.json(); // ...
-  }
+if (err instanceof HTTPError) {
+  err.response.json(); // ...
 }
 ```
 
-See [source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/error-metro.ts) for more details.
+But prefer:
 
-```js
-import { errorMetro } from 'fetch-run/use';
+```ts
+import { HTTPError } from 'fetch-run';
 
-api.use(errorMetro);
+if (err.name === 'HTTPError') {
+  (err as HTTPError).response.json(); // ...
+}
 ```
 
 ### Log requests & responses (DEV)
