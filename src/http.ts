@@ -1,6 +1,9 @@
 import qs from 'query-string';
 
 import { BodyData, Layer, Method, Middleware } from './types';
+import { parseResponse, type ResponseParsed } from './utils';
+
+type Listener = (req: Request, res: ResponseParsed) => void;
 
 type HttpOptions = Omit<RequestInit, 'headers'> & {
   headers: Headers;
@@ -10,6 +13,7 @@ export class Http {
   public readonly baseUrl: string;
   public readonly options: HttpOptions;
 
+  protected listeners: Set<Listener> = new Set();
   protected stack: Layer;
 
   constructor(baseUrl: string, options?: RequestInit) {
@@ -24,6 +28,23 @@ export class Http {
 
   public use(middleware: Middleware) {
     this.stack = middleware(this.stack);
+  }
+
+  public subscribe(listener: Listener) {
+    this.listeners.add(listener);
+
+    // Unsubscribe
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  protected async emit(req: Request, res: Response) {
+    const _res = await parseResponse(res.clone());
+
+    this.listeners.forEach((listener) => {
+      listener(req, _res);
+    });
   }
 
   public setHeader(name: string, value: string) {
@@ -69,7 +90,11 @@ export class Http {
     const req = new Request(`${this.baseUrl}/${path}`, init);
 
     // Response
-    return this.run(req);
+    const res = await this.run(req);
+
+    this.emit(req, res);
+
+    return res;
   }
 
   protected run(req: Request) {
