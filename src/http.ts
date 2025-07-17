@@ -51,8 +51,12 @@ export class Http {
     this.options.headers.set(name, value);
   }
 
-  public setBearer(token: string) {
-    this.setHeader('Authorization', `Bearer ${token}`);
+  public setBearer(token: string | null) {
+    if (token) {
+      this.setHeader('Authorization', `Bearer ${token}`);
+    } else {
+      this.options.headers.delete('Authorization');
+    }
   }
 
   protected createHeaders(init?: HeadersInit) {
