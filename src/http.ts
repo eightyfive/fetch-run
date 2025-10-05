@@ -1,5 +1,6 @@
 import qs from 'query-string';
 
+import { HTTPError } from './http-error';
 import { BodyData, Layer, Method, Middleware } from './types';
 import { parseResponse, type ResponseParsed } from './utils';
 
@@ -93,12 +94,25 @@ export class Http {
     // Request
     const req = new Request(`${this.baseUrl}/${path}`, init);
 
-    // Response
-    const res = await this.run(req);
+    try {
+      // Response
+      const res = await this.run(req);
 
-    this.emit(req, res);
+      this.emit(req, res);
 
-    return res;
+      return res;
+    } catch (err: unknown) {
+      const error = err as HTTPError | null | undefined;
+
+      if (error?.response) {
+        // If the error middleware has thrown
+        // We can emit the request & response
+        this.emit(req, error.response);
+      }
+
+      // Re-throw
+      throw err;
+    }
   }
 
   protected run(req: Request) {
