@@ -1,5 +1,4 @@
 import 'jest-fetch-mock';
-import qs from 'query-string';
 
 import { Api } from './api';
 import { Resource } from './resource';
@@ -26,7 +25,7 @@ let userPostComment: Resource<Comment>;
 
 const id = 123;
 const data = { name: 'John', email: 'john.smith@example.org' };
-const params = { foo: 'bar' };
+const searchParams = new URLSearchParams({ foo: 'bar' });
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -102,11 +101,11 @@ describe('Resource', () => {
     // @ts-ignore
     const spy = jest.spyOn(user.api, 'request');
 
-    user.search(params);
+    user.search(searchParams);
 
     expect(spy).toHaveBeenCalledWith(
       'GET',
-      `users?${qs.stringify(params)}`,
+      `users?${searchParams}`,
       undefined,
       undefined,
     );
@@ -181,11 +180,11 @@ describe('Resource', () => {
     // @ts-ignore
     const spy = jest.spyOn(user.api, 'request');
 
-    userPost.search(params, { userId: 1 });
+    userPost.search(searchParams, { userId: 1 });
 
     expect(spy).toHaveBeenCalledWith(
       'GET',
-      `users/1/posts?${qs.stringify(params)}`,
+      `users/1/posts?${searchParams}`,
       undefined,
       undefined,
     );

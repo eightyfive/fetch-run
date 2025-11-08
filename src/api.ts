@@ -47,7 +47,11 @@ export class Api extends Http implements IApi {
     return super.delete(path, options).then((res) => toJSON<Res>(res));
   }
 
-  public search<Res>(path: string, query: object, options?: RequestInit) {
+  public search<Res>(
+    path: string,
+    query: URLSearchParams,
+    options?: RequestInit,
+  ) {
     return super.search(path, query, options).then((res) => toJSON<Res>(res));
   }
 

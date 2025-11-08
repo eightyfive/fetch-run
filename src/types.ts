@@ -29,7 +29,11 @@ export interface IApi {
 
   delete<Res>(path: string, options?: RequestInit): Promise<Res>;
 
-  search<Res>(path: string, query: object, options?: RequestInit): Promise<Res>;
+  search<Res>(
+    path: string,
+    query: URLSearchParams,
+    options?: RequestInit,
+  ): Promise<Res>;
 }
 
 export type ResourceId = string | number;

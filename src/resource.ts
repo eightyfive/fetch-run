@@ -66,7 +66,7 @@ export class Resource<
   }
 
   // Search
-  public search<Res = T[]>(query: object, params?: RouteParams) {
+  public search<Res = T[]>(query: URLSearchParams, params?: RouteParams) {
     return this.api.search<Res>(this.buildPath(params), query);
   }
 

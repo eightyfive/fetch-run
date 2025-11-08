@@ -44,7 +44,9 @@ api.post<LoginRes, LoginReq>('login', data);
 
 api.get<User>(`users/${id}`).then((user) => {});
 
-api.search<User[]>('users', { firstName: 'John' }).then((users) => {});
+api
+  .search<User[]>('users', new URLSearchParams({ firstName: 'John' }))
+  .then((users) => {});
 ```
 
 ## Middlewares
@@ -214,7 +216,7 @@ type Middleware = (next: Layer) => Layer;
 
 Performs a `GET` request. If you need to pass query parameters to the URL, use `search` instead.
 
-### `search<Res>(path: string, query: object, options?: RequestInit)`
+### `search<Res>(path: string, query: URLSearchParams, options?: RequestInit)`
 
 Performs a `GET` request with additional query parameters passed in URL.
 

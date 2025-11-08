@@ -1,5 +1,3 @@
-import qs from 'query-string';
-
 import { HTTPError } from './http-error';
 import { BodyData, Layer, Method, Middleware } from './types';
 import { parseResponse, type ResponseParsed } from './utils';
@@ -151,13 +149,8 @@ export class Http {
     return this.request('DELETE', path, undefined, options);
   }
 
-  public search(path: string, query: object, options?: RequestInit) {
-    return this.request(
-      'GET',
-      `${path}?${qs.stringify(query)}`,
-      undefined,
-      options,
-    );
+  public search(path: string, query: URLSearchParams, options?: RequestInit) {
+    return this.request('GET', `${path}?${query}`, undefined, options);
   }
 
   public static create(url: string, options?: RequestInit) {
