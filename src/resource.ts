@@ -35,43 +35,43 @@ export class Resource<
   public create<
     Res extends T | void = T,
     Req extends object | void = ResourceData<T, idAttribute>,
-  >(req: Req, params?: RouteParams) {
-    return this.api.post<Res, Req>(this.buildPath(params), req);
+  >(req: Req, routeParams?: RouteParams) {
+    return this.api.post<Res, Req>(this.buildPath(routeParams), req);
   }
 
   // R
-  public read<Res = T>(id: ResourceId, params?: RouteParams) {
-    return this.api.get<Res>(this.buildPath(params, id));
+  public read<Res = T>(id: ResourceId, routeParams?: RouteParams) {
+    return this.api.get<Res>(this.buildPath(routeParams, id));
   }
 
   // U
   public update<
     Res extends T | void = T,
     Req extends object | void = ResourceData<T, idAttribute>,
-  >(id: ResourceId, req: Req, params?: RouteParams) {
-    return this.api.put<Res, Req>(this.buildPath(params, id), req);
+  >(id: ResourceId, req: Req, routeParams?: RouteParams) {
+    return this.api.put<Res, Req>(this.buildPath(routeParams, id), req);
   }
 
   // D
   public delete<Res extends T | void = void>(
     id: ResourceId,
-    params?: RouteParams,
+    routeParams?: RouteParams,
   ) {
-    return this.api.delete<Res>(this.buildPath(params, id));
+    return this.api.delete<Res>(this.buildPath(routeParams, id));
   }
 
   // L
-  public list<Res = TItem[]>(params?: RouteParams) {
-    return this.api.get<Res>(this.buildPath(params));
+  public list<Res = TItem[]>(routeParams?: RouteParams) {
+    return this.api.get<Res>(this.buildPath(routeParams));
   }
 
   // Search
-  public search<Res = T[]>(query: URLSearchParams, params?: RouteParams) {
-    return this.api.search<Res>(this.buildPath(params), query);
+  public search<Res = T[]>(query: URLSearchParams, routeParams?: RouteParams) {
+    return this.api.search<Res>(this.buildPath(routeParams), query);
   }
 
-  public buildPath(params?: RouteParams, id?: ResourceId) {
-    const paramNames = Object.keys(params ?? []).filter((param) =>
+  public buildPath(routeParams?: RouteParams, id?: ResourceId) {
+    const paramNames = Object.keys(routeParams ?? []).filter((param) =>
       this.routeParamNames.includes(param),
     );
 
@@ -83,7 +83,7 @@ export class Resource<
       );
     }
 
-    const path = params ? buildRoute(this.route, params) : this.route;
+    const path = routeParams ? buildRoute(this.route, routeParams) : this.route;
 
     if (id) {
       return `${path}/${id}`;
