@@ -9,15 +9,15 @@ export class Resource<
   protected api: IApi;
 
   public route: string;
-  public routeParamNames: string[];
 
   constructor(api: IApi, route: string) {
     this.api = api;
 
     this.route = route;
-    this.routeParamNames = parseRoute(route);
 
-    if (this.routeParamNames.some((name) => name === 'id')) {
+    const routeParamNames = parseRoute(route);
+
+    if (routeParamNames.some((name) => name === 'id')) {
       throw new Error('":id" is a reserved route param name');
     }
   }
@@ -70,19 +70,7 @@ export class Resource<
     return this.api.search<Res>(this.buildPath(routeParams), query);
   }
 
-  public buildPath(routeParams?: RouteParams, id?: ResourceId) {
-    const paramNames = Object.keys(routeParams ?? []).filter((param) =>
-      this.routeParamNames.includes(param),
-    );
-
-    if (paramNames.length !== this.routeParamNames.length) {
-      throw new Error(
-        `Missing params "${this.route}": [${this.routeParamNames
-          .filter((name) => !paramNames.includes(name))
-          .join(',')}]`,
-      );
-    }
-
+  protected buildPath(routeParams?: RouteParams, id?: ResourceId) {
     const path = routeParams ? buildRoute(this.route, routeParams) : this.route;
 
     if (id) {

@@ -203,4 +203,18 @@ describe('Resource', () => {
       undefined,
     );
   });
+
+  it('read (undefined route params)', () => {
+    // @ts-ignore
+    const spy = jest.spyOn(user.api, 'request');
+
+    userPostComment.read(id, { userId: 1 });
+
+    expect(spy).toHaveBeenCalledWith(
+      'GET',
+      `users/1/posts/:postId/comments/${id}`,
+      undefined,
+      undefined,
+    );
+  });
 });
