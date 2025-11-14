@@ -19,9 +19,13 @@ type Comment = {
 };
 
 let api: Api;
-let user: Resource<User>;
-let userPost: Resource<Post>;
-let userPostComment: Resource<Comment>;
+let user: Resource<User, User, 'users'>;
+let userPost: Resource<Post, Post, 'users/:userId/posts'>;
+let userPostComment: Resource<
+  Comment,
+  Comment,
+  'users/:userId/posts/:postId/comments'
+>;
 
 const id = 123;
 const data = { name: 'John', email: 'john.smith@example.org' };
@@ -34,11 +38,11 @@ beforeEach(() => {
 
   api = Api.create('http://example.org');
 
-  user = api.createResource<User>('users');
-  userPost = api.createResource<Post>('users/:userId/posts');
-  userPostComment = api.createResource<Comment>(
-    'users/:userId/posts/:postId/comments',
-  );
+  user = api.createResource<User>().route('users');
+  userPost = api.createResource<Post>().route('users/:userId/posts');
+  userPostComment = api
+    .createResource<Comment>()
+    .route('users/:userId/posts/:postId/comments');
 });
 
 describe('Resource', () => {
@@ -208,6 +212,7 @@ describe('Resource', () => {
     // @ts-ignore
     const spy = jest.spyOn(user.api, 'request');
 
+    // @ts-ignore: We want to test that case even if TS complains
     userPostComment.read(id, { userId: 1 });
 
     expect(spy).toHaveBeenCalledWith(
