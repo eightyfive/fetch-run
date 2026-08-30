@@ -1,7 +1,6 @@
 import merge from 'lodash.merge';
 
 import { Http } from './http';
-import { Resource } from './resource';
 import { BodyData, IApi } from './types';
 import { toJSON } from './utils';
 
@@ -53,13 +52,6 @@ export class Api extends Http implements IApi {
     options?: RequestInit,
   ) {
     return super.search(path, query, options).then((res) => toJSON<Res>(res));
-  }
-
-  public createResource<T extends object, TItem = T>() {
-    return {
-      route: <R extends string>(route: R) =>
-        new Resource<T, TItem, R>(this, route),
-    };
   }
 
   public static create(url: string, options?: RequestInit) {

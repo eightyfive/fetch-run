@@ -35,19 +35,3 @@ export interface IApi {
     options?: RequestInit,
   ): Promise<Res>;
 }
-
-export type ResourceId = string | number;
-
-export type ResourceData<
-  T extends object,
-  idAttribute extends string = 'id',
-> = Omit<T, idAttribute>;
-
-export type RouteParams = Record<string, ResourceId>;
-
-export type ExtractRouteParams<T extends string> =
-  T extends `${string}:${infer Param}/${infer Rest}`
-    ? { [K in Param | keyof ExtractRouteParams<Rest>]: ResourceId }
-    : T extends `${string}:${infer Param}`
-    ? { [K in Param]: ResourceId }
-    : {};
