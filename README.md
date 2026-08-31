@@ -1,5 +1,7 @@
 # `fetch-run`
 
+Fetch middleware for the modern minimalist.
+
 A small TypeScript wrapper around [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) with composable middleware.
 
 Use `Api` for JSON APIs—the default for most applications. It serializes request bodies as JSON and resolves requests with parsed JSON. Use [`Http`](#http) only when you need the raw `Response`.
