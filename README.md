@@ -108,7 +108,7 @@ const unsubscribe = api.subscribe((request, response) => {
 unsubscribe();
 ```
 
-Use `setBearer(null)` to remove the `Authorization` header. `subscribe()` receives each request plus a parsed clone of its response, including failed responses captured by the `error` middleware. The request still rejects with `HTTPError`; the subscription callback receives the parsed response, not the error instance.
+Use `setBearer(null)` to remove the `Authorization` header. `subscribe()` receives each request plus a `ResponseParsed` object: `data` is the parsed JSON body (or `null` when it cannot be parsed), alongside `headers`, `ok`, `status`, `statusText`, `type`, and `url`. It includes failed responses captured by the `error` middleware. The request still rejects with `HTTPError`; the subscription callback receives the parsed response, not the error instance.
 
 ## Included middleware
 
