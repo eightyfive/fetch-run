@@ -102,13 +102,15 @@ api.setHeader('X-Client-Version', '3');
 api.setBearer(accessToken);
 
 const unsubscribe = api.subscribe((request, response) => {
-  console.log(request.method, response.status);
+  if (!response.ok) {
+    console.error(request.method, response.status, response.data);
+  }
 });
 
 unsubscribe();
 ```
 
-Use `setBearer(null)` to remove the `Authorization` header. `subscribe()` receives each request plus a parsed clone of its response, including responses captured by the `error` middleware.
+Use `setBearer(null)` to remove the `Authorization` header. `subscribe()` receives each request plus a parsed clone of its response, including failed responses captured by the `error` middleware. The request still rejects with `HTTPError`; the subscription callback receives the parsed response, not the error instance.
 
 ## Included middleware
 
