@@ -9,7 +9,7 @@ Use `Api` for JSON APIs—the default for most applications. It serializes reque
 ## Install
 
 ```sh
-yarn add fetch-run
+npm install fetch-run
 ```
 
 ## Quick start
