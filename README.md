@@ -28,9 +28,11 @@ api.use(error);
 
 type User = { id: number; name: string };
 
+const getUser = (id: number) => api.get<User>(`users/${id}`);
+
 async function loadUser() {
   try {
-    return await api.get<User>('users/42');
+    return await getUser(42);
   } catch (err) {
     if (err instanceof HTTPError) {
       console.error(err.code, await err.response.json());
