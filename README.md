@@ -2,9 +2,9 @@
 
 Fetch middleware for the modern minimalist.
 
-A small TypeScript wrapper around [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) with composable middleware.
+A focused TypeScript wrapper around [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API), built around composable middleware.
 
-Use `Api` for JSON APIs—the default for most applications. It serializes request bodies as JSON and resolves requests with parsed JSON. Use [`Http`](#http) only when you need the raw `Response`.
+`Api` handles JSON request and response bodies. [`Http`](#http) uses the same request API while leaving the response untouched.
 
 ## Install
 
@@ -14,7 +14,7 @@ npm install fetch-run
 
 ## Quick start
 
-Create an `Api`, register any middleware, and make typed JSON requests.
+This example configures an `Api` instance with logging and HTTP error handling, then performs a typed request.
 
 ```ts
 import { Api, HTTPError } from 'fetch-run';
@@ -42,11 +42,11 @@ async function loadUser() {
 }
 ```
 
-`Api.create()` includes `Accept: application/json` and `Content-Type: application/json` headers. Pass `RequestInit` options when creating the API or making an individual request.
+`Api.create()` sets `Accept: application/json` and `Content-Type: application/json` by default. Pass `RequestInit` options when creating an instance or making an individual request.
 
 ## Middleware
 
-Middleware wraps every request. It can inspect or change the `Request` before `fetch`, then inspect or change the `Response` after it.
+Middleware runs on either side of a request: it receives the `Request` before `fetch` and the `Response` afterward. Either value can be inspected or modified.
 
 ```ts
 import type { Layer, Middleware } from 'fetch-run';
@@ -63,16 +63,16 @@ const timing: Middleware = (next: Layer) => async (request: Request) => {
 api.use(timing);
 ```
 
-Middleware runs in last-in, first-out order. With:
+Middleware executes in last-in, first-out order. Given:
 
 ```ts
 api.use(A);
 api.use(B);
 ```
 
-the request flows as `B before → A before → fetch → A after → B after`.
+the sequence is `B before → A before → fetch → A after → B after`.
 
-The bundled `error` middleware throws for unsuccessful HTTP responses. Register middleware that must observe a response, such as `logger`, before `error`.
+The bundled `error` middleware throws for unsuccessful HTTP responses. Register middleware that needs to observe the response, such as `logger`, before `error`.
 
 ## API
 
@@ -80,14 +80,14 @@ All `Api` request methods resolve with parsed JSON.
 
 | Method | Description |
 | --- | --- |
-| `get<Res>(path, options?)` | Make a `GET` request. |
-| `search<Res>(path, query, options?)` | Make a `GET` request with a `URLSearchParams` query. |
-| `post<Res, Req>(path, data?, options?)` | Make a `POST` request. |
-| `put<Res, Req>(path, data?, options?)` | Make a `PUT` request. |
-| `patch<Res, Req>(path, data?, options?)` | Make a `PATCH` request. |
-| `delete<Res>(path, options?)` | Make a `DELETE` request. |
+| `get<Res>(path, options?)` | Sends a `GET` request. |
+| `search<Res>(path, query, options?)` | Sends a `GET` request with a `URLSearchParams` query. |
+| `post<Res, Req>(path, data?, options?)` | Sends a `POST` request. |
+| `put<Res, Req>(path, data?, options?)` | Sends a `PUT` request. |
+| `patch<Res, Req>(path, data?, options?)` | Sends a `PATCH` request. |
+| `delete<Res>(path, options?)` | Sends a `DELETE` request. |
 
-`Req` can be an object, `FormData`, or omitted. Objects are JSON encoded. For `FormData`, `fetch-run` passes the data through and removes the JSON `Content-Type` header so the browser can set the multipart boundary.
+`Req` accepts an object, `FormData`, or no value. Objects are JSON encoded. `FormData` passes through unchanged and clears the JSON `Content-Type` header so the browser can set the multipart boundary.
 
 ### Configuration
 
@@ -108,13 +108,15 @@ const unsubscribe = api.subscribe((request, response) => {
 unsubscribe();
 ```
 
-Use `setBearer(null)` to remove the `Authorization` header. `subscribe()` receives each request plus a `ResponseParsed` object: `data` is the parsed JSON body (or `null` when it cannot be parsed), alongside `headers`, `ok`, `status`, `statusText`, `type`, and `url`. It includes failed responses captured by the `error` middleware. The request still rejects with `HTTPError`; the subscription callback receives the parsed response, not the error instance.
+`setBearer(null)` removes the `Authorization` header. `subscribe()` receives the request and a `ResponseParsed` object. Its `data` property contains the parsed JSON body or `null`; it also provides `headers`, `ok`, `status`, `statusText`, `type`, and `url`.
+
+When `error` throws an `HTTPError`, subscribers receive the corresponding `ResponseParsed` object before the request is rethrown. The callback does not receive the `HTTPError` instance.
 
 ## Included middleware
 
 ### `error`
 
-[`error`](./src/use/error.ts) throws an `HTTPError` when `response.ok` is false. The error exposes:
+[`error`](./src/use/error.ts) throws an `HTTPError` when `response.ok` is false. `HTTPError` exposes:
 
 - `code` — the HTTP status code
 - `request` — the originating `Request`
@@ -128,19 +130,19 @@ api.use(error);
 
 ### `logger`
 
-[`logger`](./src/use/logger.ts) logs each request and response to the console, including JSON request and response bodies when available. It is intended for development.
+[`logger`](./src/use/logger.ts) writes request and response information to the console, including JSON bodies when available. It is intended for development use.
 
 ```ts
 import { logger } from 'fetch-run/use';
 
-api.use(logger); // Enable in development.
+api.use(logger);
 ```
 
 Register it before `error` so failed responses are logged.
 
 ### `xsrf`
 
-[`xsrf`](./src/use/xsrf.ts) reads the browser's `XSRF-TOKEN` cookie and sets the `X-XSRF-TOKEN` request header. It is useful with [Laravel Sanctum](https://laravel.com/docs/sanctum#csrf-protection).
+[`xsrf`](./src/use/xsrf.ts) reads the browser's `XSRF-TOKEN` cookie and sets the `X-XSRF-TOKEN` request header. It works with [Laravel Sanctum](https://laravel.com/docs/sanctum#csrf-protection) CSRF protection.
 
 ```ts
 import { xsrf } from 'fetch-run/use';
@@ -150,7 +152,7 @@ api.use(xsrf);
 
 ## `Http`
 
-`Http` has the same request and middleware APIs as `Api`, but resolves with the raw [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) instead of parsing JSON. Choose it for downloads, blobs, streams, file uploads, or any endpoint that does not return JSON.
+`Http` exposes the same request and middleware APIs as `Api`, but leaves response parsing to the caller. Use it for downloads, blobs, streams, file uploads, and endpoints that do not return JSON.
 
 ```ts
 import { Http } from 'fetch-run';
