@@ -110,7 +110,7 @@ unsubscribe();
 
 `setBearer(null)` removes the `Authorization` header. `subscribe()` receives the request, the original `Response`, and the parsed JSON body (or `null` if it cannot be parsed). The response body belongs to the request caller; a subscriber that needs to read it must use `response.clone()`.
 
-When `error` throws an `HTTPError`, subscribers receive the corresponding `Response` and parsed JSON body before the request is rethrown. The callback does not receive the `HTTPError` instance.
+Subscriber notifications are asynchronous and do not delay or alter a request's resolved value or rejection. When `error` throws an `HTTPError`, subscribers are notified with the corresponding `Response` and parsed JSON body; the callback does not receive the `HTTPError` instance.
 
 ## Included middleware
 
