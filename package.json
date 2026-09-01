@@ -1,6 +1,6 @@
 {
   "name": "fetch-run",
-  "version": "2.5.1",
+  "version": "3.0.0-7",
   "description": "Fetch middleware for the modern minimalist",
   "scripts": {
     "build": "rm -rf dist && tsc --project .",
@@ -16,7 +16,7 @@
     "stack"
   ],
   "browser": "./dist/index.js",
-  "main": "./src/index.ts",
+  "main": "./dist/index.js",
   "react-native": "./src/index.ts",
   "author": "0x55 <0xfiftyfive@gmail.com>",
   "license": "ISC",
@@ -40,8 +40,7 @@
     "typescript": "^4.6.4"
   },
   "dependencies": {
-    "lodash.merge": "^4.6.2",
-    "query-string": "^7.1.1"
+    "lodash.merge": "^4.6.2"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"

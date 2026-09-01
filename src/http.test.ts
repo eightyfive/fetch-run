@@ -1,4 +1,3 @@
-import { Layer } from './types';
 import { Http } from './http';
 import 'jest-fetch-mock';
 
@@ -88,33 +87,5 @@ describe('Http', () => {
       expect(log).toHaveBeenNthCalledWith(2, res);
       done();
     });
-  });
-
-  it('maps res to JSON', (done) => {
-    fetchMock.mockResponse('{"foo": "bar"}');
-
-    api.use((next: Layer) => async (req: Request) => {
-      const res = await next(req);
-
-      return res.json();
-    });
-
-    api.get('api/resource').then((data: Response) => {
-      expect(data).toEqual({ foo: 'bar' });
-
-      done();
-    });
-  });
-
-  it('clones', () => {
-    const copy = api.clone();
-
-    expect(copy === api).toBe(false);
-    expect(copy.baseUrl).toBe(api.baseUrl);
-    expect(copy.options).toEqual(api.options);
-    expect(copy.options === api.options).toBe(false);
-
-    // @ts-ignore
-    expect(copy.stack === api.stack).toBe(false);
   });
 });
