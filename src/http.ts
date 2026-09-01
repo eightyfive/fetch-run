@@ -1,8 +1,8 @@
 import { HTTPError } from './http-error';
 import { BodyData, Layer, Method, Middleware } from './types';
-import { parseResponse, type ResponseParsed } from './utils';
+import { parseResponseData, type Json } from './utils';
 
-type Listener = (req: Request, res: ResponseParsed) => void;
+type Listener = (req: Request, res: Response, data: Json | null) => void;
 
 type HttpOptions = Omit<RequestInit, 'headers'> & {
   headers: Headers;
@@ -39,10 +39,10 @@ export class Http {
   }
 
   protected async emit(req: Request, res: Response) {
-    const _res = await parseResponse(res.clone());
+    const data = await parseResponseData(res.clone());
 
     this.listeners.forEach((listener) => {
-      listener(req, _res);
+      listener(req, res, data);
     });
   }
 

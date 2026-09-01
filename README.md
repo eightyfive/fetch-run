@@ -99,18 +99,18 @@ const api = Api.create('https://example.com/api', {
 api.setHeader('X-Client-Version', '3');
 api.setBearer(accessToken);
 
-const unsubscribe = api.subscribe((request, response) => {
+const unsubscribe = api.subscribe((request, response, data) => {
   if (!response.ok) {
-    console.error(request.method, response.status, response.data);
+    console.error(request.method, response.status, data);
   }
 });
 
 unsubscribe();
 ```
 
-`setBearer(null)` removes the `Authorization` header. `subscribe()` receives the request and a `ResponseParsed` object. Its `data` property contains the parsed JSON body or `null`; it also provides `headers`, `ok`, `status`, `statusText`, `type`, and `url`.
+`setBearer(null)` removes the `Authorization` header. `subscribe()` receives the request, the original `Response`, and the parsed JSON body (or `null` if it cannot be parsed). The response body belongs to the request caller; a subscriber that needs to read it must use `response.clone()`.
 
-When `error` throws an `HTTPError`, subscribers receive the corresponding `ResponseParsed` object before the request is rethrown. The callback does not receive the `HTTPError` instance.
+When `error` throws an `HTTPError`, subscribers receive the corresponding `Response` and parsed JSON body before the request is rethrown. The callback does not receive the `HTTPError` instance.
 
 ## Included middleware
 
