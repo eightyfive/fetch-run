@@ -9,7 +9,7 @@ A focused TypeScript wrapper around [`fetch`](https://developer.mozilla.org/en-U
 ## Install
 
 ```sh
-npm install fetch-run
+npm install fetch-run@next
 ```
 
 ## Quick start
