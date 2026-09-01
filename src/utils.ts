@@ -1,5 +1,3 @@
-import { ResourceParams } from './types';
-
 export function toJSON<T>(res: Response) {
   let data: Promise<any>;
 
@@ -12,21 +10,15 @@ export function toJSON<T>(res: Response) {
   return data as Promise<T>;
 }
 
-export function parseParams(route: string) {
-  return route
-    .split('/')
-    .filter((segment) => segment.startsWith(':'))
-    .map((param) => param.substring(1));
-}
+export type Json =
+  | string
+  | number
+  | boolean
+  | Json[]
+  | { [key: string]: Json };
 
-export function replaceParams(route: string, params: ResourceParams) {
-  let url = route;
+export async function parseResponseData(res: Response): Promise<Json | null> {
+  const data: Json | null = await res.json().catch(() => null);
 
-  for (const [name, value] of Object.entries(params)) {
-    const paramName = `:${name}`;
-
-    url = url.replace(paramName, `${value}`);
-  }
-
-  return url;
+  return data;
 }

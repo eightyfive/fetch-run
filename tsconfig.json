@@ -40,7 +40,8 @@
     "metro.config.js",
     "jest.config.js",
     "jest.setup.ts",
-    "dist"
+    "dist",
+    "**/*.test.ts"
   ],
 
   "resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"]

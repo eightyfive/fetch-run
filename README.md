@@ -2,352 +2,162 @@
 
 Fetch middleware for the modern minimalist.
 
-- [Install](#install)
-- [Usage](#usage)
-- [Middlewares](#middlewares)
-  - [Before/after concept](#beforeafter-concept)
-  - [Execution order (LIFO)](#execution-order-lifo)
-- [`Http` flavour](#http-flavour)
-- [API](#api)
-- [Included middleware](#included-middleware)
-  - [HTTP error](#http-error)
-  - [HTTP error (Metro bundler)](#http-error-metro-bundler)
-  - [Log requests & responses (DEV)](#log-requests--responses-dev)
-  - [`XSRF-TOKEN` cookie (CSRF)](#xsrf-token-cookie-csrf)
+A focused TypeScript wrapper around [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API), built around composable middleware.
+
+`Api` handles JSON request and response bodies. [`Http`](#http) uses the same request API while leaving the response untouched.
 
 ## Install
 
-```
-yarn add fetch-run
+```sh
+npm install fetch-run
 ```
 
-## Usage
+## Quick start
+
+This example configures an `Api` instance with logging and HTTP error handling, then performs a typed request.
 
 ```ts
-import { Api } from 'fetch-run';
-import * as uses from 'fetch-run/use';
+import { Api, HTTPError } from 'fetch-run';
+import { error, logger } from 'fetch-run/use';
 
-const api = Api.create('https://example.org/api/v1');
+const api = Api.create('https://example.com/api');
 
-if (__DEV__) {
-  api.use(uses.logger);
-}
+// Register response observers before `error`.
+api.use(logger);
+api.use(error);
 
-api.use(uses.error);
-
-// Later in app
-type LoginRes = { token: string };
-type LoginReq = { email: string; password };
 type User = { id: number; name: string };
 
-api.post<LoginRes, LoginReq>('login', data);
+async function loadUser() {
+  try {
+    return await api.get<User>('users/42');
+  } catch (err) {
+    if (err instanceof HTTPError) {
+      console.error(err.code, await err.response.json());
+      return;
+    }
 
-api.get<User>(`users/${id}`).then((user) => {});
-
-api.search<User[]>('users', { firstName: 'John' }).then((users) => {});
-```
-
-## Middlewares
-
-A simple implementation of the middleware pattern. It allows you to modify the [Request object](https://developer.mozilla.org/en-US/docs/Web/API/Request) before your API call and use the [Response object](https://developer.mozilla.org/en-US/docs/Web/API/Response) right after receiving the response from the server.
-
-Here are some examples/implementations of the middleware pattern:
-
-- [Using Express middleware](https://expressjs.com/en/guide/using-middleware.html)
-- [Middleware - Laravel](https://laravel.com/docs/5.7/middleware)
-- [Middleware - Redux](https://redux.js.org/advanced/middleware)
-
-A good way to visualize the middleware pattern is to think of the Request/Response lifecycle [as an onion](https://www.google.com/search?q=middleware+onion&tbm=isch). Every middleware added to the stack being a new onion layer on top of the previous one.
-
-Every middleware takes a [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) in and _must_ give a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) out.
-
-```ts
-type Layer = (req: Request) => Promise<Response>;
-
-type Middleware = (next: Layer) => Layer;
-
-// src/http/my-middleware.ts
-
-export const myMiddleware: Middleware =
-  (next: Layer) => async (req: Request) => {
-    // Before
-
-    const res: Response = await next(req);
-
-    // After
-
-    return res; // Response
-  };
-```
-
-### Before/after concept
-
-Let's write a simple middleware that remembers an "access token" and sets a "Bearer header" on the next [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) once available.
-
-```js
-// src/http/access-token.js
-
-let accessToken;
-
-export default (next) => async (req) => {
-  //
-  // BEFORE
-  // Modify/Use Request
-  //
-
-  if (accessToken) {
-    req.headers.set('Authorization', `Bearer ${accessToken}`);
-  }
-
-  const res = await next(req);
-
-  //
-  // AFTER
-  // Modify/Use Response
-  //
-
-  if (res.access_token) {
-    accessToken = res.access_token;
-  }
-
-  return res;
-};
-```
-
-### Execution order (LIFO)
-
-Since everything is a middleware, the _order of execution_ is important.
-
-Middlewares are executed in [LIFO order](https://en.wikipedia.org/wiki/FIFO_and_LIFO_accounting#LIFO) ("Last In, First Out").
-
-Everytime you push a new middleware to the stack, it is added as a new [onion layer](https://www.google.com/search?q=middleware+onion&tbm=isch) on top of all existing ones.
-
-#### Example
-
-```js
-api.use(A);
-api.use(B);
-```
-
-Execution order:
-
-1. `B` "Before" logic
-2. `A` "Before" logic
-3. (actual `fetch` call)
-4. `A` "After" logic
-5. `B` "After" logic
-
-_Note_: `B` is the most outer layer of the [onion](https://www.google.com/search?q=middleware+onion&tbm=isch).
-
-## `Http` flavour
-
-The library also exports an `Http` flavour that does not transform the [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) to JSON.
-
-```ts
-import { Http } from 'fetch-run';
-
-const http = new Http('https://example.org');
-
-http.use(error);
-
-http.get('index.html').then((res: Response) => {
-  // https://developer.mozilla.org/en-US/docs/Web/API/Response
-  res.blob();
-  res.formData();
-  res.json();
-  res.text();
-  // ...
-});
-```
-
-## API
-
-### `constructor(baseUrl: string, defaultOptions?: RequestInit)`
-
-Creates a new instance of `Api` or `Http`.
-
-```ts
-const api = new Api('', { credentials: 'include' });
-
-const http = new Http('https://example.org', {
-  mode: 'no-cors',
-  headers: { 'X-Foo': 'Bar' },
-});
-```
-
-### `static create(baseUrl?: string, defaultOptions?: RequestInit)`
-
-Alternative & convenient way for creating an instance.
-
-```ts
-const api = Api.create('', { credentials: 'include' });
-
-const http = Http.create('https://example.org', {
-  mode: 'no-cors',
-  headers: { 'X-Foo': 'Bar' },
-});
-```
-
-#### Note
-
-`Api.create` will add the following default headers:
-
-```json
-{
-  "Accept": "application/json",
-  "Content-Type": "application/json"
-}
-```
-
-`new Api`, `new Http` & `Http.create` do not.
-
-### `use(middleware: Middleware)`
-
-Adds a middleware to the stack. See [Middlewares](https://github.com/eightyfive/fetch-run#middlewares) and [Execution order (LIFO)](https://github.com/eightyfive/fetch-run#execution-order-lifo) for more information.
-
-```ts
-type Layer = (req: Request) => Promise<Response>;
-type Middleware = (next: Layer) => Layer;
-```
-
-### `get<Res>(path: string, options?: RequestInit)`
-
-Performs a `GET` request. If you need to pass query parameters to the URL, use `search` instead.
-
-### `search<Res>(path: string, query: object, options?: RequestInit)`
-
-Performs a `GET` request with additional query parameters passed in URL.
-
-### `post<Res, Req extends BodyData>(path: string, data?: Req, options?: RequestInit)`
-
-Performs a `POST` request.
-
-```ts
-type BodyData = FormData | object | void;
-```
-
-### `put<Res, Req extends BodyData>(path: string, data?: Req, options?: RequestInit)`
-
-Performs a `PUT` request.
-
-### `patch<Res, Req extends BodyData>(path: string, data?: Req, options?: RequestInit)`
-
-Performs a `PATCH` request.
-
-### `delete(path: string, options?: RequestInit)`
-
-Performs a `DELETE` request.
-
-### `options?: RequestInit`
-
-All `options` are merged with the default options (`constructor`) and passed down to the [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) object.
-
-## Included middleware
-
-### HTTP Error
-
-- Catch HTTP responses with error status code (`< 200 || >= 300` – a.k.a. [`response.ok`](https://developer.mozilla.org/en-US/docs/Web/API/Response/ok))
-- Create a custom [`err: HTTPError`](https://github.com/eightyfive/fetch-run/blob/master/src/error.ts)
-- Set `err.code = res.status`
-- Set `err.message = res.statusText`
-- Set `err.request = req`
-- Set `err.response = res`
-- Throw `HTTPError`
-
-```js
-import { error } from 'fetch-run/use';
-
-api.use(error);
-```
-
-Later in app:
-
-```js
-import { HTTPError } from 'fetch-run';
-
-try {
-  api.updateUser(123, { name: 'Tyron' });
-} catch (err) {
-  if (err instanceof HTTPError) {
-    err.response.json(); //...
-  } else {
     throw err;
   }
 }
 ```
 
-#### Note (order of execution)
+`Api.create()` sets `Accept: application/json` and `Content-Type: application/json` by default. Pass `RequestInit` options when creating an instance or making an individual request.
 
-All middlewares registered _after_ the `error` middleware, will not be executed (`error` middleware throws).
+## Middleware
 
-This is why, for example, you need to register the `logger` middleware first, so it can log `req` & `res` before the error is thrown.
-
-### HTTP Error (Metro bundler)
-
-The Metro bundler (React Native) fails with `ENOENT` error when throwing a [custom `Error`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error#custom_error_types):
-
-```
-Error: ENOENT: no such file or directory, open '<app-root>/HTTPError@http:/127.0.0.1:19000/node_modules/expo/AppEntry.bundle?platform=ios&dev=true&hot=false'
-```
-
-This is why we need to throw a "normal" `Error` and unfortunately not the custom `HTTPError` itself (yet?).
-
-This prevents the use of `instanceof HTTPError` + requires to [assert the type](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-assertions) when using Typescript:
+Middleware runs on either side of a request: it receives the `Request` before `fetch` and the `Response` afterward. Either value can be inspected or modified.
 
 ```ts
-import { HTTPError } from 'fetch-run';
+import type { Layer, Middleware } from 'fetch-run';
 
-try {
-  // ...
-} catch (err: Error) {
-  // if (err instanceof HTTPError) // Cannot...
-  if (err.name === 'HTTPError') {
-    // Assert type...
-    (err as HTTPError).response.json(); // ...
+const timing: Middleware = (next: Layer) => async (request: Request) => {
+  const startedAt = performance.now();
+  const response = await next(request);
+
+  console.log(`${request.method} took ${performance.now() - startedAt}ms`);
+
+  return response;
+};
+
+api.use(timing);
+```
+
+Middleware executes in last-in, first-out order. Given:
+
+```ts
+api.use(A);
+api.use(B);
+```
+
+the sequence is `B before → A before → fetch → A after → B after`.
+
+The bundled `error` middleware throws for unsuccessful HTTP responses. Register middleware that needs to observe the response, such as `logger`, before `error`.
+
+## API
+
+All `Api` request methods resolve with parsed JSON.
+
+| Method | Description |
+| --- | --- |
+| `get<Res>(path, options?)` | Sends a `GET` request. |
+| `search<Res>(path, query, options?)` | Sends a `GET` request with a `URLSearchParams` query. |
+| `post<Res, Req>(path, data?, options?)` | Sends a `POST` request. |
+| `put<Res, Req>(path, data?, options?)` | Sends a `PUT` request. |
+| `patch<Res, Req>(path, data?, options?)` | Sends a `PATCH` request. |
+| `delete<Res>(path, options?)` | Sends a `DELETE` request. |
+
+`Req` accepts an object, `FormData`, or no value. Objects are JSON encoded. `FormData` passes through unchanged and clears the JSON `Content-Type` header so the browser can set the multipart boundary.
+
+### Configuration
+
+```ts
+const api = Api.create('https://example.com/api', {
+  credentials: 'include',
+});
+
+api.setHeader('X-Client-Version', '3');
+api.setBearer(accessToken);
+
+const unsubscribe = api.subscribe((request, response, data) => {
+  if (!response.ok) {
+    console.error(request.method, response.status, data);
   }
-}
+});
+
+unsubscribe();
 ```
 
-See [source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/error-metro.ts) for more details.
+`setBearer(null)` removes the `Authorization` header. `subscribe()` receives the request, the original `Response`, and the parsed JSON body (or `null` if it cannot be parsed). The response body belongs to the request caller; a subscriber that needs to read it must use `response.clone()`.
 
-```js
-import { errorMetro } from 'fetch-run/use';
+Subscriber notifications are asynchronous and do not delay or alter a request's resolved value or rejection. When `error` throws an `HTTPError`, subscribers are notified with the corresponding `Response` and parsed JSON body; the callback does not receive the `HTTPError` instance.
 
-api.use(errorMetro);
+## Included middleware
+
+### `error`
+
+[`error`](./src/use/error.ts) throws an `HTTPError` when `response.ok` is false. `HTTPError` exposes:
+
+- `code` — the HTTP status code
+- `request` — the originating `Request`
+- `response` — the server `Response`
+
+```ts
+import { error } from 'fetch-run/use';
+
+api.use(error);
 ```
 
-### Log requests & responses (DEV)
+### `logger`
 
-A simple `Request` & `Response` console logger for when you don't need (yet) the full [Debug Remote JS](https://docs.expo.dev/workflow/debugging/) capabilities.
+[`logger`](./src/use/logger.ts) writes request and response information to the console, including JSON bodies when available. It is intended for development use.
 
-```js
+```ts
 import { logger } from 'fetch-run/use';
 
-if (__DEV__) {
-  api.use(logger);
-}
-
-// Note: To register before `error` middleware (throws)
-// api.use(error)
+api.use(logger);
 ```
 
-[Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/logger.ts)
+Register it before `error` so failed responses are logged.
 
-<img src="images/console-log.png" />
+### `xsrf`
 
-<img src="images/console-error.png" />
+[`xsrf`](./src/use/xsrf.ts) reads the browser's `XSRF-TOKEN` cookie and sets the `X-XSRF-TOKEN` request header. It works with [Laravel Sanctum](https://laravel.com/docs/sanctum#csrf-protection) CSRF protection.
 
-### `XSRF-TOKEN` cookie (CSRF)
-
-For example when used with [Laravel Sanctum](https://laravel.com/docs/9.x/sanctum#csrf-protection).
-
-- Get `XSRF-TOKEN` cookie value
-- Set `X-XSRF-TOKEN` header
-
-```js
+```ts
 import { xsrf } from 'fetch-run/use';
 
 api.use(xsrf);
 ```
 
-[Source code](https://github.com/eightyfive/fetch-run/blob/master/src/use/xsrf.ts)
+## `Http`
+
+`Http` exposes the same request and middleware APIs as `Api`, but leaves response parsing to the caller. Use it for downloads, blobs, streams, file uploads, and endpoints that do not return JSON.
+
+```ts
+import { Http } from 'fetch-run';
+
+const http = Http.create('https://example.com');
+const response = await http.get('manual.pdf');
+const file = await response.blob();
+```

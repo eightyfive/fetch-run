@@ -1,35 +1,28 @@
-import qs from 'query-string';
-
+import { HTTPError } from './http-error';
 import { BodyData, Layer, Method, Middleware } from './types';
+import { parseResponseData, type Json } from './utils';
+
+type Listener = (req: Request, res: Response, data: Json | null) => void;
 
 type HttpOptions = Omit<RequestInit, 'headers'> & {
   headers: Headers;
 };
 
-type ErrorHandler = (err: unknown) => void;
-
-type Listener = (req: Request, res: Response) => void;
-
 export class Http {
   public readonly baseUrl: string;
   public readonly options: HttpOptions;
 
-  protected errorHandlers: Set<ErrorHandler> = new Set();
   protected listeners: Set<Listener> = new Set();
   protected stack: Layer;
 
-  constructor(baseUrl: string, options?: RequestInit, stack?: Layer) {
+  constructor(baseUrl: string, options?: RequestInit) {
     this.baseUrl = baseUrl;
 
     this.options = Object.assign({}, options, {
       headers: new Headers(options?.headers),
     });
 
-    if (stack) {
-      this.stack = stack.bind(this);
-    } else {
-      this.stack = (req: Request) => fetch(req);
-    }
+    this.stack = (req: Request) => fetch(req);
   }
 
   public use(middleware: Middleware) {
@@ -45,21 +38,24 @@ export class Http {
     };
   }
 
-  public onError(handler: ErrorHandler) {
-    this.errorHandlers.add(handler);
+  protected async emit(req: Request, res: Response) {
+    const data = await parseResponseData(res.clone());
 
-    // Unsubscribe
-    return () => {
-      this.errorHandlers.delete(handler);
-    };
+    this.listeners.forEach((listener) => {
+      listener(req, res, data);
+    });
   }
 
   public setHeader(name: string, value: string) {
     this.options.headers.set(name, value);
   }
 
-  public setBearer(token: string) {
-    this.setHeader('Authorization', `Bearer ${token}`);
+  public setBearer(token: string | null) {
+    if (token) {
+      this.setHeader('Authorization', `Bearer ${token}`);
+    } else {
+      this.options.headers.delete('Authorization');
+    }
   }
 
   protected createHeaders(init?: HeadersInit) {
@@ -96,43 +92,29 @@ export class Http {
     // Request
     const req = new Request(`${this.baseUrl}/${path}`, init);
 
-    // Response
     try {
+      // Response
       const res = await this.run(req);
 
-      this.emit(req, res.clone());
+      this.emit(req, res);
 
       return res;
-    } catch (err) {
-      this.handleError(err);
+    } catch (err: unknown) {
+      const error = err as HTTPError | null | undefined;
 
+      if (error?.response) {
+        // If the error middleware has thrown
+        // We can emit the request & response
+        this.emit(req, error.response);
+      }
+
+      // Re-throw
       throw err;
     }
   }
 
-  protected emit(req: Request, res: Response) {
-    this.listeners.forEach((listener) => {
-      listener(req, res);
-    });
-  }
-
-  protected handleError(err: unknown) {
-    this.errorHandlers.forEach((handler) => {
-      handler(err);
-    });
-  }
-
   protected run(req: Request) {
     return this.stack(req);
-  }
-
-  public clone(pathname: string = '') {
-    // @ts-ignore
-    return new this.constructor(
-      pathname ? `${this.baseUrl}/${pathname}` : this.baseUrl,
-      { ...this.options },
-      this.stack,
-    );
   }
 
   public get(path: string, options?: RequestInit) {
@@ -167,16 +149,11 @@ export class Http {
     return this.request('DELETE', path, undefined, options);
   }
 
-  public search(path: string, query: object, options?: RequestInit) {
-    return this.request(
-      'GET',
-      `${path}?${qs.stringify(query)}`,
-      undefined,
-      options,
-    );
+  public search(path: string, query: URLSearchParams, options?: RequestInit) {
+    return this.request('GET', `${path}?${query}`, undefined, options);
   }
 
-  public static create(url?: string, options?: RequestInit) {
-    return new Http(url ?? '', options);
+  public static create(url: string, options?: RequestInit) {
+    return new Http(url, options);
   }
 }

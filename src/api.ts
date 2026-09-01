@@ -1,7 +1,6 @@
 import merge from 'lodash.merge';
 
 import { Http } from './http';
-import { Resource } from './resource';
 import { BodyData, IApi } from './types';
 import { toJSON } from './utils';
 
@@ -47,15 +46,15 @@ export class Api extends Http implements IApi {
     return super.delete(path, options).then((res) => toJSON<Res>(res));
   }
 
-  public search<Res>(path: string, query: object, options?: RequestInit) {
+  public search<Res>(
+    path: string,
+    query: URLSearchParams,
+    options?: RequestInit,
+  ) {
     return super.search(path, query, options).then((res) => toJSON<Res>(res));
   }
 
-  public resource<T extends object, TItem = T>(endpoint: string) {
-    return new Resource<T, TItem>(this, endpoint);
-  }
-
-  public static create(url?: string, options?: RequestInit) {
-    return new Api(url ?? '', merge({}, defaultOptions, options));
+  public static create(url: string, options?: RequestInit) {
+    return new Api(url, merge({}, defaultOptions, options));
   }
 }
