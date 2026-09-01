@@ -25,7 +25,8 @@
     "dist",
     "images",
     "src",
-    "use"
+    "use",
+    "!src/**/*.test.ts"
   ],
   "devDependencies": {
     "@types/jest": "^27.5.1",
