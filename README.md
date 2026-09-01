@@ -2,9 +2,9 @@
 
 Fetch middleware for the modern minimalist.
 
-A TypeScript wrapper around [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) with composable middleware.
+A focused TypeScript wrapper around [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API), built around composable middleware.
 
-`Api` serializes request bodies as JSON and resolves with parsed JSON. [`Http`](#http) exposes the same request API and resolves with the raw `Response`.
+`Api` handles JSON request and response bodies. [`Http`](#http) uses the same request API while leaving the response untouched.
 
 ## Install
 
@@ -14,7 +14,7 @@ npm install fetch-run
 
 ## Quick start
 
-The following example configures an `Api` instance with logging and HTTP error handling, then performs a typed request.
+This example configures an `Api` instance with logging and HTTP error handling, then performs a typed request.
 
 ```ts
 import { Api, HTTPError } from 'fetch-run';
@@ -42,11 +42,11 @@ async function loadUser() {
 }
 ```
 
-`Api.create()` sets `Accept: application/json` and `Content-Type: application/json` headers. `RequestInit` options can be supplied when creating an instance and for individual requests.
+`Api.create()` sets `Accept: application/json` and `Content-Type: application/json` by default. Pass `RequestInit` options when creating an instance or making an individual request.
 
 ## Middleware
 
-A middleware receives a `Request` before it reaches `fetch` and receives its `Response` after the request completes. It can modify either value.
+Middleware runs on either side of a request: it receives the `Request` before `fetch` and the `Response` afterward. Either value can be inspected or modified.
 
 ```ts
 import type { Layer, Middleware } from 'fetch-run';
@@ -63,16 +63,16 @@ const timing: Middleware = (next: Layer) => async (request: Request) => {
 api.use(timing);
 ```
 
-Middleware is composed in last-in, first-out order. Given:
+Middleware executes in last-in, first-out order. Given:
 
 ```ts
 api.use(A);
 api.use(B);
 ```
 
-the execution sequence is `B before → A before → fetch → A after → B after`.
+the sequence is `B before → A before → fetch → A after → B after`.
 
-The bundled `error` middleware throws for unsuccessful HTTP responses. Middleware that must observe the response, such as `logger`, must be registered before `error`.
+The bundled `error` middleware throws for unsuccessful HTTP responses. Register middleware that needs to observe the response, such as `logger`, before `error`.
 
 ## API
 
@@ -80,14 +80,14 @@ All `Api` request methods resolve with parsed JSON.
 
 | Method | Description |
 | --- | --- |
-| `get<Res>(path, options?)` | Executes a `GET` request. |
-| `search<Res>(path, query, options?)` | Executes a `GET` request with a `URLSearchParams` query. |
-| `post<Res, Req>(path, data?, options?)` | Executes a `POST` request. |
-| `put<Res, Req>(path, data?, options?)` | Executes a `PUT` request. |
-| `patch<Res, Req>(path, data?, options?)` | Executes a `PATCH` request. |
-| `delete<Res>(path, options?)` | Executes a `DELETE` request. |
+| `get<Res>(path, options?)` | Sends a `GET` request. |
+| `search<Res>(path, query, options?)` | Sends a `GET` request with a `URLSearchParams` query. |
+| `post<Res, Req>(path, data?, options?)` | Sends a `POST` request. |
+| `put<Res, Req>(path, data?, options?)` | Sends a `PUT` request. |
+| `patch<Res, Req>(path, data?, options?)` | Sends a `PATCH` request. |
+| `delete<Res>(path, options?)` | Sends a `DELETE` request. |
 
-`Req` accepts an object, `FormData`, or no value. Objects are JSON encoded. `FormData` is passed through unchanged and removes the JSON `Content-Type` header so the browser can set the multipart boundary.
+`Req` accepts an object, `FormData`, or no value. Objects are JSON encoded. `FormData` passes through unchanged and clears the JSON `Content-Type` header so the browser can set the multipart boundary.
 
 ### Configuration
 
@@ -108,9 +108,9 @@ const unsubscribe = api.subscribe((request, response) => {
 unsubscribe();
 ```
 
-`setBearer(null)` removes the `Authorization` header. The `subscribe()` callback receives the request and a `ResponseParsed` object. `ResponseParsed.data` contains the parsed JSON body or `null`; the remaining properties are `headers`, `ok`, `status`, `statusText`, `type`, and `url`.
+`setBearer(null)` removes the `Authorization` header. `subscribe()` receives the request and a `ResponseParsed` object. Its `data` property contains the parsed JSON body or `null`; it also provides `headers`, `ok`, `status`, `statusText`, `type`, and `url`.
 
-When the `error` middleware throws an `HTTPError`, subscribers receive the corresponding `ResponseParsed` object before the request is rethrown. The callback does not receive the `HTTPError` instance.
+When `error` throws an `HTTPError`, subscribers receive the corresponding `ResponseParsed` object before the request is rethrown. The callback does not receive the `HTTPError` instance.
 
 ## Included middleware
 
@@ -130,7 +130,7 @@ api.use(error);
 
 ### `logger`
 
-[`logger`](./src/use/logger.ts) writes request and response information to the console. JSON request and response bodies are included when available. It is intended for development use.
+[`logger`](./src/use/logger.ts) writes request and response information to the console, including JSON bodies when available. It is intended for development use.
 
 ```ts
 import { logger } from 'fetch-run/use';
@@ -142,7 +142,7 @@ Register it before `error` so failed responses are logged.
 
 ### `xsrf`
 
-[`xsrf`](./src/use/xsrf.ts) reads the browser's `XSRF-TOKEN` cookie and sets the `X-XSRF-TOKEN` request header. It supports [Laravel Sanctum](https://laravel.com/docs/sanctum#csrf-protection) CSRF protection.
+[`xsrf`](./src/use/xsrf.ts) reads the browser's `XSRF-TOKEN` cookie and sets the `X-XSRF-TOKEN` request header. It works with [Laravel Sanctum](https://laravel.com/docs/sanctum#csrf-protection) CSRF protection.
 
 ```ts
 import { xsrf } from 'fetch-run/use';
@@ -152,7 +152,7 @@ api.use(xsrf);
 
 ## `Http`
 
-`Http` exposes the same request and middleware APIs as `Api`, but leaves response parsing to the caller. It is suitable for downloads, blobs, streams, file uploads, and endpoints that do not return JSON.
+`Http` exposes the same request and middleware APIs as `Api`, but leaves response parsing to the caller. Use it for downloads, blobs, streams, file uploads, and endpoints that do not return JSON.
 
 ```ts
 import { Http } from 'fetch-run';
