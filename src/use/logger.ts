@@ -10,13 +10,15 @@ export function createLogger({ verbose }: LoggerOptions) {
   return (next: Layer) => async (request: Request) => {
     const req = request.clone();
 
+    const start = Date.now();
     const response = await next(request);
+    const elapsed = Date.now() - start;
 
     const res = response.clone();
 
     const pathname = req.url.replace(RE_HOSTNAME, '');
 
-    let contents = `${req.method} ${pathname ?? '/'} (${res.status})`;
+    let contents = `${req.method} ${pathname ?? '/'} (${res.status}) ${elapsed}ms`;
 
     if (verbose && res.headers.get('Content-Type') === 'application/json') {
       // Log request data
