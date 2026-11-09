@@ -140,6 +140,48 @@ api.use(logger);
 
 Register it before `error` so failed responses are logged.
 
+### `retry`
+
+[`retry`](./src/use/retry.ts) retries transient failures with exponential backoff. Register it once to configure all requests on an `Api` or `Http` instance. Retries are opt-in; existing clients are unchanged until this middleware is registered.
+
+```ts
+import { createRetry, error, logger } from 'fetch-run/use';
+
+api.use(logger);
+api.use(createRetry({ retry: 3 }));
+api.use(error);
+```
+
+This allows **three additional attempts** after the initial request, waiting **1s, 2s, then 4s**. With a larger retry budget, delays keep doubling up to a **30s cap**. For these defaults, `api.use(retry)` is also available from `fetch-run/use`.
+
+The options follow [TanStack Query's retry configuration](https://tanstack.com/query/latest/docs/framework/react/guides/query-retries):
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `retry` | `3` | Additional attempts. `false` or `0` disables retries; `true` permits unlimited retries of eligible failures; `(failureCount, error) => boolean` supplies a custom policy. |
+| `retryDelay` | `count => Math.min(1000 * 2 ** count, 30000)` | A delay in milliseconds or `(failureCount, error) => milliseconds`. |
+| `methods` | `['GET', 'HEAD', 'OPTIONS']` | HTTP methods eligible for retries, case-insensitive. Opt writes in only when repeating them is safe for your endpoint. |
+
+Both callbacks receive a zero-based count: `0` before the first retry. HTTP failures are represented by `HTTPError`; other thrown values pass through unchanged. A custom `retry` predicate replaces the default failure classification and retry limit, but still respects `methods` and cancellation.
+
+By default, retryable failures are network `TypeError`s and HTTP **408, 429, 500, 502, 503, 504**. Other failures, including ordinary 4xx responses and aborts, are not retried. Delays use the configured policy; `Retry-After` headers are not interpreted automatically.
+
+```ts
+import { HTTPError } from 'fetch-run';
+import { createRetry } from 'fetch-run/use';
+
+api.use(createRetry({
+  retry: (count, error) => count < 2 && (
+    error instanceof HTTPError ? error.code === 503 : error instanceof TypeError
+  ),
+  retryDelay: (count) => Math.min(500 * 2 ** count, 10000),
+}));
+```
+
+Request bodies are cloned for each attempt. Passing an `AbortSignal` cancels both fetch and any pending retry delay. Each request has its own retry budget, including concurrent requests.
+
+The middleware works with or without `error`, in either registration order. Without `error`, an exhausted HTTP failure resolves with the final `Response`; with it, the request rejects with the final `HTTPError`. In the example above, `logger` sees each attempt and `error` sees only the final response. Subscribers receive only the final outcome. Use a single retry middleware per client; when also using TanStack Query, enable retries in one layer to avoid multiplying attempts.
+
 ### `xsrf`
 
 [`xsrf`](./src/use/xsrf.ts) reads the browser's `XSRF-TOKEN` cookie and sets the `X-XSRF-TOKEN` request header. It works with [Laravel Sanctum](https://laravel.com/docs/sanctum#csrf-protection) CSRF protection.
