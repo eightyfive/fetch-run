@@ -2,15 +2,8 @@ import { HTTPError } from '../http-error';
 import { Middleware } from '../types';
 
 export interface RetryOptions {
-  /** Additional attempts, or a predicate whose failureCount starts at zero. */
-  retry?:
-    | boolean
-    | number
-    | ((failureCount: number, error: unknown) => boolean);
-  /** Milliseconds before a retry. Defaults to exponential backoff capped at 30s. */
-  retryDelay?: number | ((failureCount: number, error: unknown) => number);
-  /** Methods eligible for retries. Writes must be explicitly opted in. */
-  methods?: readonly string[];
+  /** Additional attempts. Defaults to 3; 0 disables retries. */
+  retry?: number;
 }
 
 function isTransient(error: unknown) {
@@ -34,14 +27,6 @@ function abortReason(signal: AbortSignal) {
   );
 }
 
-function validateDelay(delay: number) {
-  if (!Number.isFinite(delay) || delay < 0 || delay > 2147483647) {
-    throw new RangeError(
-      'retryDelay must be between 0 and 2147483647 milliseconds.',
-    );
-  }
-}
-
 function wait(delay: number, signal?: AbortSignal | null) {
   return new Promise<void>((resolve, reject) => {
     if (signal?.aborted) {
@@ -63,25 +48,16 @@ function wait(delay: number, signal?: AbortSignal | null) {
   });
 }
 
-export function createRetry({
-  retry = 3,
-  retryDelay = (failureCount) => Math.min(1000 * 2 ** failureCount, 30000),
-  methods = ['GET', 'HEAD', 'OPTIONS'],
-}: RetryOptions = {}): Middleware {
-  if (typeof retry === 'number' && (!Number.isInteger(retry) || retry < 0)) {
-    throw new RangeError('retry must be a non-negative integer.');
+export function createRetry({ retry = 3 }: RetryOptions = {}): Middleware {
+  if (!Number.isSafeInteger(retry) || retry < 0) {
+    throw new RangeError('retry must be a non-negative safe integer.');
   }
-  if (typeof retryDelay === 'number') {
-    validateDelay(retryDelay);
-  }
-
-  const allowedMethods = new Set(methods.map((method) => method.toUpperCase()));
 
   return (next) => async (request) => {
     if (request.signal?.aborted) {
       throw abortReason(request.signal);
     }
-    if (!allowedMethods.has(request.method) || retry === false || retry === 0) {
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method) || retry === 0) {
       return next(request);
     }
 
@@ -92,7 +68,7 @@ export function createRetry({
 
       let response: Response | undefined;
       let failure: unknown;
-      // Keep the original body available for every attempt, including uploads.
+      // Isolate each attempt from downstream middleware changes.
       const attempt = request.clone();
       try {
         response = await next(attempt);
@@ -108,10 +84,7 @@ export function createRetry({
         throw abortReason(request.signal);
       }
       const shouldRetry =
-        !isAbort(failure) &&
-        (typeof retry === 'function'
-          ? retry(failureCount, failure)
-          : isTransient(failure) && (retry === true || failureCount < retry));
+        !isAbort(failure) && isTransient(failure) && failureCount < retry;
 
       if (!shouldRetry) {
         // Preserve downstream behavior: only the error middleware throws HTTP errors.
@@ -121,11 +94,7 @@ export function createRetry({
         throw failure;
       }
 
-      const delay =
-        typeof retryDelay === 'function'
-          ? retryDelay(failureCount, failure)
-          : retryDelay;
-      validateDelay(delay);
+      const delay = Math.min(1000 * 2 ** failureCount, 30000);
 
       // Release discarded fetch responses without waiting on a cloned stream's tee.
       const discarded =

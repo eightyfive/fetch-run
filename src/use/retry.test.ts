@@ -62,10 +62,10 @@ describe('retry middleware', () => {
     expect(jest.getTimerCount()).toBe(0);
   });
 
-  it.each([false, 0])('disables retries with retry: %s', async (setting) => {
+  it('disables retries with retry: 0', async () => {
     const next = jest.fn(async () => new Response(null, { status: 503 }));
     expect(
-      (await createRetry({ retry: setting })(next)(new Request(url))).status,
+      (await createRetry({ retry: 0 })(next)(new Request(url))).status,
     ).toBe(503);
     expect(next).toHaveBeenCalledTimes(1);
     expect(jest.getTimerCount()).toBe(0);
@@ -81,17 +81,15 @@ describe('retry middleware', () => {
   );
 
   it.each([408, 429, 500, 502, 503, 504])(
-    'recovers from HTTP %s with a configured delay',
+    'recovers from HTTP %s after one second',
     async (status) => {
       const next = jest
         .fn<Layer>()
         .mockResolvedValueOnce(new Response(null, { status }))
         .mockResolvedValueOnce(new Response('ok'));
-      const result = createRetry({ retry: 1, retryDelay: 25 })(next)(
-        new Request(url),
-      );
+      const result = createRetry({ retry: 1 })(next)(new Request(url));
       await flush();
-      jest.advanceTimersByTime(24);
+      jest.advanceTimersByTime(999);
       await flush();
       expect(next).toHaveBeenCalledTimes(1);
       jest.advanceTimersByTime(1);
@@ -103,57 +101,27 @@ describe('retry middleware', () => {
   it('retries network failures and preserves the last rejection', async () => {
     const failure = new TypeError('Failed to fetch');
     const next = jest.fn<Layer>().mockRejectedValue(failure);
-    const result = createRetry({ retry: 1, retryDelay: 10 })(next)(
-      new Request(url),
-    );
+    const result = createRetry({ retry: 1 })(next)(new Request(url));
     const assertion = expect(result).rejects.toBe(failure);
     await flush();
-    jest.advanceTimersByTime(10);
+    jest.advanceTimersByTime(1000);
     await assertion;
     expect(next).toHaveBeenCalledTimes(2);
   });
 
-  it('does not retry unrelated middleware errors or abort errors, even with retry: true', async () => {
+  it('does not retry unrelated middleware errors or abort errors', async () => {
     for (const failure of [
       new Error('middleware failed'),
       Object.assign(new Error('cancelled'), { name: 'AbortError' }),
     ]) {
       const next = jest.fn<Layer>().mockRejectedValue(failure);
-      await expect(
-        createRetry({ retry: true })(next)(new Request(url)),
-      ).rejects.toBe(failure);
+      await expect(retry(next)(new Request(url))).rejects.toBe(failure);
       expect(next).toHaveBeenCalledTimes(1);
     }
   });
 
-  it('supports a custom predicate and delay with zero-based counts and HTTP errors', async () => {
-    const counts: number[] = [];
-    const delays: number[] = [];
-    const next = jest.fn(async () => new Response(null, { status: 404 }));
-    const result = createRetry({
-      retry: (count, failure) => {
-        expect(failure).toBeInstanceOf(HTTPError);
-        expect((failure as HTTPError).code).toBe(404);
-        counts.push(count);
-        return count < 2;
-      },
-      retryDelay: (count, failure) => {
-        expect((failure as HTTPError).code).toBe(404);
-        delays.push(count);
-        return (count + 1) * 10;
-      },
-    })(next)(new Request(url));
-    await flush();
-    jest.advanceTimersByTime(10);
-    await flush();
-    jest.advanceTimersByTime(20);
-    expect((await result).status).toBe(404);
-    expect(counts).toEqual([0, 1, 2]);
-    expect(delays).toEqual([0, 1]);
-  });
-
   it.each(['POST', 'PUT', 'PATCH', 'DELETE'])(
-    'does not repeat %s requests by default',
+    'never repeats %s requests after an HTTP failure',
     async (method) => {
       const next = jest.fn(async () => new Response(null, { status: 503 }));
       await retry(next)(new Request(url, { method }));
@@ -161,31 +129,39 @@ describe('retry middleware', () => {
     },
   );
 
-  it('replays the complete body and headers when writes are explicitly enabled', async () => {
-    const bodies: string[] = [];
-    const next = jest.fn(async (request: Request) => {
-      bodies.push(await request.text());
-      expect(request.headers.get('Idempotency-Key')).toBe('create-user-1');
-      return new Response(null, { status: bodies.length === 1 ? 503 : 200 });
-    });
-    const result = createRetry({ methods: ['post'], retryDelay: 10 })(next)(
-      new Request(url, {
-        method: 'POST',
-        body: '{"name":"Sam"}',
-        headers: { 'Idempotency-Key': 'create-user-1' },
-      }),
-    );
-    await flush();
-    jest.advanceTimersByTime(10);
-    expect((await result).status).toBe(200);
-    expect(bodies).toEqual(['{"name":"Sam"}', '{"name":"Sam"}']);
-  });
+  it.each(['POST', 'PUT', 'PATCH', 'DELETE'])(
+    'never repeats %s requests after a network failure',
+    async (method) => {
+      const failure = new TypeError('Failed to fetch');
+      const next = jest.fn<Layer>().mockRejectedValue(failure);
+      await expect(retry(next)(new Request(url, { method }))).rejects.toBe(
+        failure,
+      );
+      expect(next).toHaveBeenCalledTimes(1);
+      expect(jest.getTimerCount()).toBe(0);
+    },
+  );
+
+  it.each(['HEAD', 'OPTIONS'])(
+    'retries transient failures on %s requests',
+    async (method) => {
+      const next = jest
+        .fn<Layer>()
+        .mockResolvedValueOnce(new Response(null, { status: 503 }))
+        .mockResolvedValueOnce(new Response(null, { status: 200 }));
+      const result = retry(next)(new Request(url, { method }));
+      await flush();
+      jest.advanceTimersByTime(1000);
+      expect((await result).status).toBe(200);
+      expect(next).toHaveBeenCalledTimes(2);
+    },
+  );
 
   it.each([true, false])(
     'works with error middleware registered first: %s',
     async (errorFirst) => {
       const http = Http.create('https://api.example.test');
-      const retryMiddleware = createRetry({ retry: 1, retryDelay: 10 });
+      const retryMiddleware = createRetry({ retry: 1 });
       http.use(errorFirst ? error : retryMiddleware);
       http.use(errorFirst ? retryMiddleware : error);
       fetchMock.mockResponses(
@@ -195,7 +171,7 @@ describe('retry middleware', () => {
       const result = http.get('users');
       const assertion = expect(result).rejects.toMatchObject({ code: 503 });
       await flush();
-      jest.advanceTimersByTime(10);
+      jest.advanceTimersByTime(1000);
       await assertion;
       expect(fetchMock).toHaveBeenCalledTimes(2);
       const failure = await result.catch((caught: HTTPError) => caught);
@@ -231,27 +207,29 @@ describe('retry middleware', () => {
 
   it('keeps retry budgets independent for concurrent requests', async () => {
     const next = jest.fn(async () => new Response(null, { status: 503 }));
-    const run = createRetry({ retry: 1, retryDelay: 10 })(next);
+    const run = createRetry({ retry: 1 })(next);
     const results = Promise.all([run(new Request(url)), run(new Request(url))]);
     await flush();
-    jest.advanceTimersByTime(10);
+    jest.advanceTimersByTime(1000);
     expect((await results).map((response) => response.status)).toEqual([
       503, 503,
     ]);
     expect(next).toHaveBeenCalledTimes(4);
   });
 
-  it.each([-1, 1.5, Infinity, NaN])(
-    'rejects an invalid retry budget: %s',
-    (count) => {
-      expect(() => createRetry({ retry: count })).toThrow(RangeError);
-    },
-  );
-
-  it.each([-1, Infinity, NaN, 2147483648])(
-    'rejects an invalid delay: %s',
-    (delay) => {
-      expect(() => createRetry({ retryDelay: delay })).toThrow(RangeError);
-    },
-  );
+  it.each([
+    -1,
+    1.5,
+    Infinity,
+    NaN,
+    Number.MAX_SAFE_INTEGER + 1,
+    true,
+    false,
+    '3',
+    () => true,
+  ])('rejects an invalid retry budget: %s', (count) => {
+    expect(() => createRetry({ retry: count as unknown as number })).toThrow(
+      RangeError,
+    );
+  });
 });
