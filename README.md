@@ -148,8 +148,8 @@ Register it before `error` so failed responses are logged.
 import { createRetry, error, logger } from 'fetch-run/use';
 
 api.use(logger);
-api.use(createRetry({ retry: 3 }));
 api.use(error);
+api.use(createRetry({ retry: 3 }));
 ```
 
 This allows **three additional attempts** after the initial request, waiting **1s, 2s, then 4s**. With a larger retry budget, delays keep doubling up to a **30s cap**. For these defaults, `api.use(retry)` is also available from `fetch-run/use`.
@@ -162,7 +162,7 @@ Retryable failures are network `TypeError`s and HTTP **408, 429, 500, 502, 503, 
 
 Passing an `AbortSignal` cancels both fetch and any pending retry delay. Each request has its own retry budget, including concurrent requests.
 
-The middleware works with or without `error`, in either registration order. Without `error`, an exhausted HTTP failure resolves with the final `Response`; with it, the request rejects with the final `HTTPError`. In the example above, `logger` sees each attempt and `error` sees only the final response. Subscribers receive only the final outcome. Use a single retry middleware per client; when also using TanStack Query, enable retries in one layer to avoid multiplying attempts.
+Register `error` **before** `retry`, as shown above. Middleware wraps in reverse registration order, so `error` turns failed responses into `HTTPError`s that `retry` can catch. Retry does not inspect HTTP response statuses itself: omitting `error` or registering it after `retry` means HTTP failures will not be retried. After retries are exhausted, the final error is rethrown. In the example above, `logger` and `error` see each attempt. Subscribers receive only the final outcome. Use a single retry middleware per client; when also using TanStack Query, enable retries in one layer to avoid multiplying attempts.
 
 ### `xsrf`
 
