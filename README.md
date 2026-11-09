@@ -140,6 +140,30 @@ api.use(logger);
 
 Register it before `error` so failed responses are logged.
 
+### `retry`
+
+[`retry`](./src/use/retry.ts) retries transient failures with exponential backoff. Register it once to configure all requests on an `Api` or `Http` instance. Retries are opt-in; existing clients are unchanged until this middleware is registered.
+
+```ts
+import { createRetry, error, logger } from 'fetch-run/use';
+
+api.use(logger);
+api.use(error);
+api.use(createRetry({ retry: 3 }));
+```
+
+This allows **three additional attempts** after the initial request, waiting **1s, 2s, then 4s**. With a larger retry budget, delays keep doubling up to a **30s cap**. For these defaults, `api.use(retry)` is also available from `fetch-run/use`.
+
+The only option is `retry`: a non-negative safe integer specifying the number of additional attempts. It defaults to `3`; use `0` to disable retries. Backoff is always exponential, starting at 1 second and capped at 30 seconds.
+
+Only **GET, HEAD, and OPTIONS** requests can retry. Write requests (including POST, PUT, PATCH, and DELETE) are never retried.
+
+Retryable failures are network `TypeError`s and HTTP **408, 429, 500, 502, 503, 504**. Other failures, including ordinary 4xx responses and aborts, are not retried. `Retry-After` headers are not interpreted automatically.
+
+Passing an `AbortSignal` cancels both fetch and any pending retry delay. Each request has its own retry budget, including concurrent requests.
+
+Register `error` **before** `retry`, as shown above. Middleware wraps in reverse registration order, so `error` turns failed responses into `HTTPError`s that `retry` can catch. Retry does not inspect HTTP response statuses itself: omitting `error` or registering it after `retry` means HTTP failures will not be retried. After retries are exhausted, the final error is rethrown. In the example above, `logger` and `error` see each attempt. Subscribers receive only the final outcome. Use a single retry middleware per client; when also using TanStack Query, enable retries in one layer to avoid multiplying attempts.
+
 ### `xsrf`
 
 [`xsrf`](./src/use/xsrf.ts) reads the browser's `XSRF-TOKEN` cookie and sets the `X-XSRF-TOKEN` request header. It works with [Laravel Sanctum](https://laravel.com/docs/sanctum#csrf-protection) CSRF protection.
